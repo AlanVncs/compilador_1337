@@ -49,15 +49,15 @@ typedef enum {
     MINUS_NODE,   // -
     BW_LSL_NODE,  // <<
     BW_LSR_NODE,  // >>
+    BW_AND_NODE,  // &
+    BW_XOR_NODE,  // ^
+    BW_OR_NODE,   // |
     LT_NODE,      // <
     GT_NODE,      // >
     LE_NODE,      // <=
     GE_NODE,      // >=
     EQ_NODE,      // ==
     NE_NODE,      // !=
-    BW_AND_NODE,  // &
-    BW_XOR_NODE,  // ^
-    BW_OR_NODE,   // |
     AND_NODE,     // &&
     OR_NODE,      // ||
     TERN_OP_NOPE, // ?:
@@ -132,6 +132,7 @@ struct data;
 typedef struct ast AST;
 
 AST* new_ast(Type type, NodeKind kind, ...);
+AST* clone_ast(AST* source);
 void add_ast_child(AST *parent, AST *child);
 AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...);
 int has_float_data(AST* ast);

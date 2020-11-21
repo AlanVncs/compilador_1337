@@ -3,7 +3,7 @@
 int fatorial(int n);
 
 int main(int argceta, char argv, char l){
-    while(argceta) for(int l=8; l<19; l=l+1){
+    while(argceta) for(int l=8; l<19; l+=1){
         if(argv){
             return 10||8&4;
         }

@@ -48,6 +48,16 @@ AST* new_ast(Type type, NodeKind kind, ...) {
     return ast;
 }
 
+AST* clone_ast(AST* source){
+    AST* clone = new_ast(source->type, source->kind, 0);
+    if(has_float_data(source))
+        clone->float_data = source->float_data;
+    else
+        clone->int_data = source->int_data;
+    set_ast_name(clone, source->name);
+    return clone;
+}
+
 void add_ast_child(AST* parent, AST* child){
     if (parent->children_length%AST_CHILDREN_BLOCK_SIZE == 0) {
         int new_size = AST_CHILDREN_BLOCK_SIZE + parent->children_length;
@@ -385,12 +395,6 @@ AST* new_node(NodeKind kind, int data, Type type, Scope* scope) {
     }
     // Inicializacao da lista encadeada aqui
     return node;
-}
-
-AST* clone_ast(AST* source){
-    AST* new_ast = new_node(source->kind, 0, source->type, source->scope);
-    new_ast->data = source->data;
-    return new_ast;
 }
 
 void add_child(AST *parent, AST *child) {
