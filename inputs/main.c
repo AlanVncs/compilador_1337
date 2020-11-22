@@ -13,6 +13,7 @@ int main(int argceta, char argv, char l){
         argv;
     }
 
+
     gg_iz: switch(l){
         case 4: {int a; return a;}
         case 5: {int b; return b;} break;

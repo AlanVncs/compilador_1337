@@ -7,11 +7,11 @@
 #include "type.h"
 
 struct ast {
-    int id;
     union {
         int   int_data;
         float float_data;
     };
+    int id;
     NodeKind kind;
     Type type;
     struct ast** children;
@@ -21,7 +21,14 @@ struct ast {
     char name[128];
 };
 
+typedef struct {
+    Type type;
+    NodeKind lnk;
+    NodeKind rnk;
+} Unif;
 
+
+// Create
 int next_ast_id = 0;
 AST* new_ast(Type type, NodeKind kind, ...) {
 
@@ -58,16 +65,6 @@ AST* clone_ast(AST* source){
     return clone;
 }
 
-void add_ast_child(AST* parent, AST* child){
-    if (parent->children_length%AST_CHILDREN_BLOCK_SIZE == 0) {
-        int new_size = AST_CHILDREN_BLOCK_SIZE + parent->children_length;
-        parent->children = realloc(parent->children, new_size*sizeof(AST*));
-        if(!parent->children){printf("add_ast_child: Could not allocate memory\n"); exit(EXIT_FAILURE);}
-    }
-    parent->children[parent->children_length] = child;
-    parent->children_length++;
-}
-
 AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...){
 
     AST* parent = new_ast(type, kind, 0);
@@ -82,6 +79,43 @@ AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...){
     return parent;
 }
 
+AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast){
+    // Recria a árvore de acordo com o operador de atribuição
+
+    AST* subtree;
+    switch(op){
+        case OP_ASSIGN:        return new_ast_subtree(NO_TYPE, ASSIGN_NODE, 2, l_ast, r_ast);                   // =
+        case OP_MUL_ASSIGN: subtree = new_ast_subtree(NO_TYPE, TIMES_NODE, 2, clone_ast(l_ast), r_ast); break;  // *=
+        case OP_DIV_ASSIGN: subtree = new_ast_subtree(NO_TYPE, OVER_NODE, 2, clone_ast(l_ast), r_ast); break;   // /=
+        case OP_MOD_ASSIGN: subtree = new_ast_subtree(NO_TYPE, MOD_NODE, 2, clone_ast(l_ast), r_ast); break;    // %=
+        case OP_ADD_ASSIGN: subtree = new_ast_subtree(NO_TYPE, PLUS_NODE, 2, clone_ast(l_ast), r_ast); break;   // +=
+        case OP_SUB_ASSIGN: subtree = new_ast_subtree(NO_TYPE, MINUS_NODE, 2, clone_ast(l_ast), r_ast); break;  // -=
+        case OP_LSL_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_LSL_NODE, 2, clone_ast(l_ast), r_ast); break; // <<=
+        case OP_LSR_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_LSR_NODE, 2, clone_ast(l_ast), r_ast); break; // >>=
+        case OP_AND_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_AND_NODE, 2, clone_ast(l_ast), r_ast); break; // &=
+        case OP_XOR_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_XOR_NODE, 2, clone_ast(l_ast), r_ast); break; // ^=
+        case OP_OR_ASSIGN:  subtree = new_ast_subtree(NO_TYPE, BW_OR_NODE, 2, clone_ast(l_ast), r_ast); break;  // |=
+
+        default: 
+            printf("assign_eval error: Line %d\n", yylineno);
+            exit(EXIT_FAILURE);
+    }
+    return new_ast_subtree(NO_TYPE, ASSIGN_NODE, 2, l_ast, subtree);
+}
+
+// Modify
+void add_ast_child(AST* parent, AST* child){
+    if (parent->children_length%AST_CHILDREN_BLOCK_SIZE == 0) {
+        int new_size = AST_CHILDREN_BLOCK_SIZE + parent->children_length;
+        parent->children = realloc(parent->children, new_size*sizeof(AST*));
+        if(!parent->children){printf("add_ast_child: Could not allocate memory\n"); exit(EXIT_FAILURE);}
+    }
+    parent->children[parent->children_length] = child;
+    parent->children_length++;
+}
+
+
+// Test
 int has_float_data(AST* ast){
     switch (ast->kind) {
         case FLOAT_VAL_NODE:
@@ -105,6 +139,8 @@ int has_data(AST* ast){
     }
 }
 
+
+// Output
 void gen_ast_dot(AST* ast){
     if(!ast){printf("gen_ast_dor: Empty AST\n\n"); return;}
     FILE* ast_file = fopen("ast.dot", "w+"); // TODO Why w+
@@ -179,7 +215,7 @@ void print_ast(AST* ast){
 }
 
 
-// Getters
+// Get
 char* get_kind_str(NodeKind kind){
     // TODO
     switch(kind) {
@@ -306,7 +342,8 @@ char* get_ast_name(AST* ast){
     return ast->name;
 }
 
-// Setters
+
+// Set
 void set_ast_name(AST* ast, char* name){
     strcpy(ast->name, name);
 }
@@ -316,9 +353,6 @@ void set_ast_name(AST* ast, char* name){
 
 
 
-// AST* clone_ast(AST* source);
-// AST* get_first_child(AST* ast);
-// Entry *remove_var(Scope *scope, int idx);
 // void free_tree(AST *tree);
 // NodeKind get_kind(AST *node);
 // int get_data(AST *node);
@@ -326,43 +360,11 @@ void set_ast_name(AST* ast, char* name){
 // float get_float_data(AST *node);
 // Type get_node_type(AST *node);
 // int get_child_count(AST *node);
-// Scope* get_scope(AST *node);
 // void set_scope(AST *node, Scope *scope);
-// int print_node_dot(AST *node, FILE* st_file);
-// void print_dot(AST *tree);
-// void print_tree(AST *ast);
-// void show_ast(AST *ast);
-// char *op2text(Op op);
-
-// void print_dot(AST *ast);
-// char* get_kind_str(NodeKind kind);
 // Unif get_kinds(Op op, Type lt, Type rt);
 
 
 /*
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "ast.h"
-#include "table.h" 
-#include "type.h"
-
-#define CHILDREN_LIMIT 20
-
-struct node {
-    NodeKind kind;
-    union {
-        int   as_int;
-        float as_float;
-    } data;
-    Type type;
-    int count;
-    // TODO Isso devera ser uma lista encadeada
-    // AST **children;
-    AST* child[CHILDREN_LIMIT];
-    Scope* scope;
-};
 
 AST* get_first_child(AST* ast){
     return ast->child[0];

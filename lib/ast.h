@@ -5,6 +5,7 @@
 
 #define AST_CHILDREN_BLOCK_SIZE 15
 
+// NodeKind
 typedef enum {
     PROGRAM_START_NODE,
     INIT_DECL_LIST_NODE,
@@ -83,6 +84,7 @@ typedef enum {
 
 } NodeKind;
 
+// Op
 typedef enum {
     OP_PLUS,         // +
     OP_MINUS,        // -
@@ -122,31 +124,33 @@ typedef enum {
 
 } Op;
 
-typedef struct {
-    Type type;
-    NodeKind lnk;
-    NodeKind rnk;
-} Unif;
-
 struct data;
 typedef struct ast AST;
 
+// Create
 AST* new_ast(Type type, NodeKind kind, ...);
 AST* clone_ast(AST* source);
-void add_ast_child(AST *parent, AST *child);
 AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...);
+AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast);
+
+// Modify
+void add_ast_child(AST *parent, AST *child);
+
+// Test
 int has_float_data(AST* ast);
 int has_data(AST* ast);
+
+// Output
 void gen_ast_dot(AST *ast);
 void gen_node_dot(AST *node, FILE* ast_file);
 void print_ast(AST *ast);
 
-// Getters
+// Get
 char* get_kind_str(NodeKind kind);
 char* get_op_str(Op op);
 char* get_ast_name(AST* ast);
 
-// Setters
+// Set
 void set_ast_name(AST* ast, char* name);
 
 
