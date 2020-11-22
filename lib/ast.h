@@ -7,15 +7,16 @@
 
 // NodeKind
 typedef enum {
+
     PROGRAM_START_NODE,
     INIT_DECL_LIST_NODE,
-    PARAMETER_LIST_NODE,
     FUNCTION_DECL_NODE,
     FUNCTION_DEF_NODE,
+    PARAMETER_LIST_NODE,
+    ARGUMENT_LIST_NODE,
     COMPOUND_STMT_NODE,
 
     // STRUCT_DECL_NODE,
-    // ARG_LIST_NODE,
     // STRUCT_FIELDS_NODE,
 
     IF_NODE,
@@ -27,7 +28,6 @@ typedef enum {
     SWITCH_DEFAULT_NODE,
 
     LABEL_DECL_NODE,
-
     VAR_DECL_NODE,
     VAR_USE_NODE,
 
@@ -37,7 +37,7 @@ typedef enum {
     DOUBLE_VAL_NODE,
     STR_VAL_NODE,
 
-    // FUNC_CALL_NODE,
+    FUNCTION_CALL_NODE,
     GOTO_NODE,
     CONTINUE_NODE,
     BREAK_NODE,
@@ -64,8 +64,13 @@ typedef enum {
     TERN_OP_NOPE, // ?:
     ASSIGN_NODE,  // = += -= *= /= %= ^= |= &= >>= <<=
 
-    // NOT_NODE, // !
-    // BW_NOT_NODE, // ~
+    // TODO Nodes de operadoes unários
+    ADDRESS_NODE// &
+    _NODE// *
+    _NODE// +
+    _NODE// -
+    BW_NOT_NODE, // ~
+    NOT_NODE,    // !
 
     // C2I_NODE,
     // C2F_NODE,

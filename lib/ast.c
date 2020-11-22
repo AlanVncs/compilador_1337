@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-// #include "table.h"
 #include "ast.h"
 #include "type.h"
+// #include "table.h"
 
 struct ast {
     union {
@@ -78,6 +78,7 @@ AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...){
 
     return parent;
 }
+
 
 // Modify
 void add_ast_child(AST* parent, AST* child){
@@ -196,16 +197,14 @@ char* get_kind_str(NodeKind kind){
     // TODO
     switch(kind) {
         case PROGRAM_START_NODE:   return "program_start";
-        case VAR_DECL_NODE:        return "var_decl";
-        case VAR_USE_NODE:         return "var_use";
         case INIT_DECL_LIST_NODE:  return "init_decl_list";
-        case PARAMETER_LIST_NODE:  return "parameter_list";
         case FUNCTION_DECL_NODE:   return "function_decl";
         case FUNCTION_DEF_NODE:    return "function_def";
+        case PARAMETER_LIST_NODE:  return "parameter_list";
+        case ARGUMENT_LIST_NODE:   return "argument_list";
         case COMPOUND_STMT_NODE:   return "compound_stmt";
         
         // case STRUCT_DECL_NODE:     return "struct_decl";
-        // case ARG_LIST_NODE:        return "args";
         // case STRUCT_FIELDS_NODE:   return "struct_fields";
 
         case IF_NODE:              return "if_stmt";
@@ -217,6 +216,8 @@ char* get_kind_str(NodeKind kind){
         case SWITCH_DEFAULT_NODE:  return "switch_default";
 
         case LABEL_DECL_NODE:      return "label_decl";
+        case VAR_DECL_NODE:        return "var_decl";
+        case VAR_USE_NODE:         return "var_use";
 
         case CHAR_VAL_NODE:        return "char_val";
         case INT_VAL_NODE:         return "int_val";
@@ -224,7 +225,7 @@ char* get_kind_str(NodeKind kind){
         case DOUBLE_VAL_NODE:      return "double_val";
         case STR_VAL_NODE:         return "str_val";
 
-        // case FUNCTION_CALL_NODE:       return "function_call";
+        case FUNCTION_CALL_NODE:   return "function_call";
         case GOTO_NODE:            return "goto";
         case CONTINUE_NODE:        return "continue";
         case BREAK_NODE:           return "break";

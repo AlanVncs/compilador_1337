@@ -105,25 +105,25 @@ generic_association:
 postfix_expression:
     primary_expression                                   { }
   | postfix_expression '[' expression ']'                { /* Acredito que seja Uso de vetor */ }
-  | postfix_expression '(' ')'                           { /* TODO Function call */ }
-  | postfix_expression '(' argument_expression_list ')'  { /* TODO Function call */ }
+  | postfix_expression '(' ')'                           { $$=new_ast_subtree(NO_TYPE, FUNCTION_CALL_NODE, 1, $1); }
+  | postfix_expression '(' argument_expression_list ')'  { $$=new_ast_subtree(NO_TYPE, FUNCTION_CALL_NODE, 2, $1, $3); }
   | postfix_expression '.' IDENTIFIER                    { /* Acesso a um campo de uma struct */ }
   | postfix_expression PTR_OP IDENTIFIER                 { /* Acesso a um campo de uma struct pointer */ }
-  | postfix_expression INC_OP                            { AST* inc=build_assign_ast(OP_ADD_ASSIGN, $1, new_ast(NO_TYPE, INT_VAL_NODE, 1)); $$=new_ast_subtree(NO_TYPE, MINUS_NODE, 2, inc, new_ast(NO_TYPE, INT_VAL_NODE, 1)); }
-  | postfix_expression DEC_OP                            { AST* inc=build_assign_ast(OP_SUB_ASSIGN, $1, new_ast(NO_TYPE, INT_VAL_NODE, 1)); $$=new_ast_subtree(NO_TYPE, PLUS_NODE, 2, inc, new_ast(NO_TYPE, INT_VAL_NODE, 1)); }
+  | postfix_expression INC_OP                            { AST* inc=build_assign_ast(OP_ADD_ASSIGN, $1, new_ast(INT_TYPE, INT_VAL_NODE, 1)); $$=new_ast_subtree(NO_TYPE, MINUS_NODE, 2, inc, new_ast(INT_TYPE, INT_VAL_NODE, 1)); }
+  | postfix_expression DEC_OP                            { AST* inc=build_assign_ast(OP_SUB_ASSIGN, $1, new_ast(INT_TYPE, INT_VAL_NODE, 1)); $$=new_ast_subtree(NO_TYPE, PLUS_NODE, 2, inc, new_ast(INT_TYPE, INT_VAL_NODE, 1)); }
   | '(' type_name ')' '{' initializer_list '}'
   | '(' type_name ')' '{' initializer_list ',' '}'
 ;
 
 argument_expression_list:
-    assignment_expression                               { }
-  | argument_expression_list ',' assignment_expression  { }
+    assignment_expression                               { $$=new_ast_subtree(NO_TYPE, ARGUMENT_LIST_NODE, 1, $1); }
+  | argument_expression_list ',' assignment_expression  { add_ast_child($1, $3); $$=$1; }
 ;
 
 unary_expression:
     postfix_expression
-  | INC_OP unary_expression         { $$=build_assign_ast(OP_ADD_ASSIGN, $2, new_ast(NO_TYPE, INT_VAL_NODE, 1)); }
-  | DEC_OP unary_expression         { $$=build_assign_ast(OP_SUB_ASSIGN, $2, new_ast(NO_TYPE, INT_VAL_NODE, 1)); }
+  | INC_OP unary_expression         { $$=build_assign_ast(OP_ADD_ASSIGN, $2, new_ast(INT_TYPE, INT_VAL_NODE, 1)); }
+  | DEC_OP unary_expression         { $$=build_assign_ast(OP_SUB_ASSIGN, $2, new_ast(INT_TYPE, INT_VAL_NODE, 1)); }
   | unary_operator cast_expression  { /* TODO Agir de acorodo com o operador*/ }
   | SIZEOF unary_expression
   | SIZEOF '(' type_name ')'
@@ -131,12 +131,12 @@ unary_expression:
 ;
 
 unary_operator:
-    '&'     { }
-  | '*'     { }
-  | '+'     { }
-  | '-'     { }
-  | '~'     { }
-  | '!'     { }
+    '&'     { $$= }
+  | '*'     { $$= }
+  | '+'     { $$= }
+  | '-'     { $$= }
+  | '~'     { $$= }
+  | '!'     { $$= }
 ;
 
 cast_expression:

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int fatorial(int n);
+int fatorial(int n, int h);
 
 int main(int argceta, char argv, char l){
     while(argceta) for(int l=8; l<19; l--){
@@ -17,7 +17,7 @@ int main(int argceta, char argv, char l){
     gg_iz: switch(l){
         case 4: {int a; return a;}
         case 5: {int b; return b;} break;
-        default: return fatorial(5);
+        default: return fatorial(5, argv+5^2);
     }
 }
 
