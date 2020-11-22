@@ -16,4 +16,4 @@ valgrind: compile
 	@valgrind ./compiler.bin < inputs/main.c
 
 clean:
-	@rm -rf compilador.bin parser.c parser.h scanner.c ast.dot ast.pdf
+	@rm -rf compilador.bin parser.c parser.h scanner.c compiler.bin ast.dot ast.pdf

@@ -131,7 +131,6 @@ typedef struct ast AST;
 AST* new_ast(Type type, NodeKind kind, ...);
 AST* clone_ast(AST* source);
 AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...);
-AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast);
 
 // Modify
 void add_ast_child(AST *parent, AST *child);

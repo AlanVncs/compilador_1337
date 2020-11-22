@@ -79,30 +79,6 @@ AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...){
     return parent;
 }
 
-AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast){
-    // Recria a árvore de acordo com o operador de atribuição
-
-    AST* subtree;
-    switch(op){
-        case OP_ASSIGN:        return new_ast_subtree(NO_TYPE, ASSIGN_NODE, 2, l_ast, r_ast);                   // =
-        case OP_MUL_ASSIGN: subtree = new_ast_subtree(NO_TYPE, TIMES_NODE, 2, clone_ast(l_ast), r_ast); break;  // *=
-        case OP_DIV_ASSIGN: subtree = new_ast_subtree(NO_TYPE, OVER_NODE, 2, clone_ast(l_ast), r_ast); break;   // /=
-        case OP_MOD_ASSIGN: subtree = new_ast_subtree(NO_TYPE, MOD_NODE, 2, clone_ast(l_ast), r_ast); break;    // %=
-        case OP_ADD_ASSIGN: subtree = new_ast_subtree(NO_TYPE, PLUS_NODE, 2, clone_ast(l_ast), r_ast); break;   // +=
-        case OP_SUB_ASSIGN: subtree = new_ast_subtree(NO_TYPE, MINUS_NODE, 2, clone_ast(l_ast), r_ast); break;  // -=
-        case OP_LSL_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_LSL_NODE, 2, clone_ast(l_ast), r_ast); break; // <<=
-        case OP_LSR_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_LSR_NODE, 2, clone_ast(l_ast), r_ast); break; // >>=
-        case OP_AND_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_AND_NODE, 2, clone_ast(l_ast), r_ast); break; // &=
-        case OP_XOR_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_XOR_NODE, 2, clone_ast(l_ast), r_ast); break; // ^=
-        case OP_OR_ASSIGN:  subtree = new_ast_subtree(NO_TYPE, BW_OR_NODE, 2, clone_ast(l_ast), r_ast); break;  // |=
-
-        default: 
-            printf("assign_eval error: Line %d\n", yylineno);
-            exit(EXIT_FAILURE);
-    }
-    return new_ast_subtree(NO_TYPE, ASSIGN_NODE, 2, l_ast, subtree);
-}
-
 // Modify
 void add_ast_child(AST* parent, AST* child){
     if (parent->children_length%AST_CHILDREN_BLOCK_SIZE == 0) {

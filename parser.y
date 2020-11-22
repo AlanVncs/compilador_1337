@@ -19,6 +19,9 @@ extern int yylineno;
 extern char* yytext;
 
 
+AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast);
+
+
 char last_id[129];
 
 AST* root_ast = NULL;
@@ -106,8 +109,8 @@ postfix_expression:
   | postfix_expression '(' argument_expression_list ')'  { /* TODO Function call */ }
   | postfix_expression '.' IDENTIFIER                    { /* Acesso a um campo de uma struct */ }
   | postfix_expression PTR_OP IDENTIFIER                 { /* Acesso a um campo de uma struct pointer */ }
-  | postfix_expression INC_OP                            { /* TODO Retornar valor / Criar Assign node com filhos PLUS_NODE e INT_VAL_NODE(1) */ }
-  | postfix_expression DEC_OP                            { /* TODO Retornar valor / Criar Assign node com filhos MINUS_NODE e INT_VAL_NODE(1) */ }
+  | postfix_expression INC_OP                            { AST* inc=build_assign_ast(OP_ADD_ASSIGN, $1, new_ast(NO_TYPE, INT_VAL_NODE, 1)); $$=new_ast_subtree(NO_TYPE, MINUS_NODE, 2, inc, new_ast(NO_TYPE, INT_VAL_NODE, 1)); }
+  | postfix_expression DEC_OP                            { AST* inc=build_assign_ast(OP_SUB_ASSIGN, $1, new_ast(NO_TYPE, INT_VAL_NODE, 1)); $$=new_ast_subtree(NO_TYPE, PLUS_NODE, 2, inc, new_ast(NO_TYPE, INT_VAL_NODE, 1)); }
   | '(' type_name ')' '{' initializer_list '}'
   | '(' type_name ')' '{' initializer_list ',' '}'
 ;
@@ -137,11 +140,12 @@ unary_operator:
 ;
 
 cast_expression:
-    unary_expression                                                { }
-  | '(' type_name ')' c+ast_expression                               { /* TODO No de conversão*/ }
+    unary_expression
+  | '(' type_name ')' cast_expression                               { /* TODO No de conversão*/ }
 ;
 
-]=[]    cast_expression
+multiplicative_expression:
+    cast_expression
   | multiplicative_expression '*' cast_expression                   { $$=new_ast_subtree(NO_TYPE, TIMES_NODE, 2, $1, $3); }
   | multiplicative_expression '/' cast_expression                   { $$=new_ast_subtree(NO_TYPE, OVER_NODE, 2, $1, $3); }
   | multiplicative_expression '%' cast_expression                   { $$=new_ast_subtree(NO_TYPE, MOD_NODE, 2, $1, $3); }
@@ -205,7 +209,7 @@ conditional_expression:
 
 assignment_expression:
     conditional_expression
-  | unary_expression assignment_operator assignment_expression      { $$=assign_eval(last_assign_op, $1, $3); }
+  | unary_expression assignment_operator assignment_expression      { $$=build_assign_ast(last_assign_op, $1, $3); }
 ;
 
 assignment_operator:
@@ -305,7 +309,7 @@ struct_declaration_list:
 ;
 
 struct_declaration:
-    specifier_qualifier_list ';'	                    { } /* for anonymous struct/union */
+    specifier_qualifier_list ';'	                      { } /* for anonymous struct/union */
   | specifier_qualifier_list struct_declarator_list ';' { }
   | static_assert_declaration
 ;
@@ -579,4 +583,27 @@ int main(void) {
 int sym_type(char* id){
     // TODO Implementar da maneira correta!!!
     return IDENTIFIER;
+}
+
+// Recria a árvore de acordo com o operador de atribuição
+AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast){
+    AST* subtree;
+    switch(op){
+        case OP_ASSIGN:        return new_ast_subtree(NO_TYPE, ASSIGN_NODE, 2, l_ast, r_ast);                   // =
+        case OP_MUL_ASSIGN: subtree = new_ast_subtree(NO_TYPE, TIMES_NODE, 2, clone_ast(l_ast), r_ast); break;  // *=
+        case OP_DIV_ASSIGN: subtree = new_ast_subtree(NO_TYPE, OVER_NODE, 2, clone_ast(l_ast), r_ast); break;   // /=
+        case OP_MOD_ASSIGN: subtree = new_ast_subtree(NO_TYPE, MOD_NODE, 2, clone_ast(l_ast), r_ast); break;    // %=
+        case OP_ADD_ASSIGN: subtree = new_ast_subtree(NO_TYPE, PLUS_NODE, 2, clone_ast(l_ast), r_ast); break;   // +=
+        case OP_SUB_ASSIGN: subtree = new_ast_subtree(NO_TYPE, MINUS_NODE, 2, clone_ast(l_ast), r_ast); break;  // -=
+        case OP_LSL_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_LSL_NODE, 2, clone_ast(l_ast), r_ast); break; // <<=
+        case OP_LSR_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_LSR_NODE, 2, clone_ast(l_ast), r_ast); break; // >>=
+        case OP_AND_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_AND_NODE, 2, clone_ast(l_ast), r_ast); break; // &=
+        case OP_XOR_ASSIGN: subtree = new_ast_subtree(NO_TYPE, BW_XOR_NODE, 2, clone_ast(l_ast), r_ast); break; // ^=
+        case OP_OR_ASSIGN:  subtree = new_ast_subtree(NO_TYPE, BW_OR_NODE, 2, clone_ast(l_ast), r_ast); break;  // |=
+
+        default: 
+            printf("assign_eval error: Line %d\n", yylineno);
+            exit(EXIT_FAILURE);
+    }
+    return new_ast_subtree(NO_TYPE, ASSIGN_NODE, 2, l_ast, subtree);
 }
