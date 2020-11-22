@@ -1,0 +1,6 @@
+ast.dot
+ast.pdf
+compiler.bin
+parser.c
+parser.h
+scanner.c
