@@ -28,7 +28,7 @@ typedef struct {
 } Unif;
 
 
-// Create
+// Create | Delete
 int next_ast_id = 0;
 AST* new_ast(Type type, NodeKind kind, ...) {
 
@@ -79,9 +79,18 @@ AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...){
     return parent;
 }
 
+void delete_ast(AST *ast) {
+    if (ast == NULL) return;
+    for (int i=0; i<ast->children_length; i++) {
+        delete_ast(ast->children[i]);
+    }
+    free(ast->children);
+    free(ast);
+}
+
 
 // Modify
-void add_ast_child(AST* parent, AST* child){
+AST* add_ast_child(AST* parent, AST* child){
     if (parent->children_length%AST_CHILDREN_BLOCK_SIZE == 0) {
         int new_size = AST_CHILDREN_BLOCK_SIZE + parent->children_length;
         parent->children = realloc(parent->children, new_size*sizeof(AST*));
@@ -89,6 +98,7 @@ void add_ast_child(AST* parent, AST* child){
     }
     parent->children[parent->children_length] = child;
     parent->children_length++;
+    return parent;
 }
 
 
@@ -120,7 +130,7 @@ int has_data(AST* ast){
 // Output
 void gen_ast_dot(AST* ast){
     if(!ast){printf("gen_ast_dor: Empty AST\n\n"); return;}
-    FILE* ast_file = fopen("ast.dot", "w+"); // TODO Why w+
+    FILE* ast_file = fopen("ast.dot", "w");
     fprintf(ast_file, "digraph {\ngraph [ordering=\"out\"];\n");
     gen_node_dot(ast, ast_file);
     fprintf(ast_file, "}\n");
@@ -216,6 +226,7 @@ char* get_kind_str(NodeKind kind){
         case SWITCH_DEFAULT_NODE:  return "switch_default";
 
         case LABEL_DECL_NODE:      return "label_decl";
+        case VAR_DECL_INIT_NODE:   return "var_decl_init";
         case VAR_DECL_NODE:        return "var_decl";
         case VAR_USE_NODE:         return "var_use";
 
@@ -231,6 +242,9 @@ char* get_kind_str(NodeKind kind){
         case BREAK_NODE:           return "break";
         case RETURN_NODE:          return "return";
 
+        case CAST_NODE:            return "cast";
+
+        case SIZEOF_NODE:          return "sizeof";
         case TIMES_NODE:           return "*";
         case OVER_NODE:            return "/";
         case MOD_NODE:             return "%";
@@ -251,6 +265,13 @@ char* get_kind_str(NodeKind kind){
         case OR_NODE:              return "||";
         case TERN_OP_NOPE:         return "?:";
         case ASSIGN_NODE:          return "=";
+
+        case ADDRESS_NODE:         return "&";
+        case DEREFERENCE_NODE:     return "*";
+        case POSITIVE_NODE:        return "+";
+        case NEGATIVE_NODE:        return "-";
+        case BW_NOT_NODE:          return "~";
+        case NOT_NODE:             return "!";
 
         // case C2I_NODE:              return "c2i";
         // case C2F_NODE:              return "c2f";
@@ -361,165 +382,9 @@ Entry *remove_var(Scope *scope, int idx){
     return removed;
 }
 
-AST* new_node(NodeKind kind, int data, Type type, Scope* scope) {
-    AST* node = malloc(sizeof * node);
-    node->kind = kind;
-    node->data.as_int = data;
-    node->type = type;
-    node->count = 0;
-    node->scope=scope;
-
-    for (int i = 0; i < CHILDREN_LIMIT; i++) {
-        node->child[i] = NULL;
-    }
-    // Inicializacao da lista encadeada aqui
-    return node;
-}
-
-void add_child(AST *parent, AST *child) {
-    if (parent->count == CHILDREN_LIMIT) {
-        fprintf(stderr, "Cannot add another child!\n");
-        exit(1);
-    }
-    parent->child[parent->count] = child;
-    parent->count++;
-}
-
-AST* new_subtree(NodeKind kind, Type type, int child_count, ...) {
-    if (child_count > CHILDREN_LIMIT) {
-        fprintf(stderr, "Too many children as arguments!\n");
-        exit(1);
-    }
-
-    AST* node = new_node(kind, 0, type, NULL);
-    va_list ap;
-    va_start(ap, child_count);
-    for (int i = 0; i < child_count; i++) {
-        add_child(node, va_arg(ap, AST*));
-    }
-    va_end(ap);
-    return node;
-}
-
-NodeKind get_kind(AST *node) {
-    return node->kind;
-}
-
-int get_data(AST *node) {
-    return node->data.as_int;
-}
-
-void set_float_data(AST *node, float data) {
-    node->data.as_float = data;
-}
-
-float get_float_data(AST *node) {
-    return node->data.as_float;
-}
-
-Type get_node_type(AST *node) {
-    return node->type;
-}
-
-int get_child_count(AST *node) {
-    return node->count;
-}
-
-Scope* get_scope(AST *node){
-    return node->scope;
-}
-
-void set_scope(AST *node, Scope *scope){
-    node->scope = scope;
-}
-
-void free_tree(AST *tree) {
-    if (tree == NULL) return;
-    for (int i = 0; i < tree->count; i++) {
-        free_tree(tree->child[i]);
-    }
-    free(tree);
-}
-
 //----------------------------------------------
 
 int nr;
-
-char* kind2str(NodeKind kind) {
-    switch(kind) {
-        case VAR_DECL_NODE:         return "var_decl";
-        case VAR_USE_NODE:          return "var_use";
-        case TRANSLATION_UNIT_NODE: return "translation_unit";
-        case DECLARATION_NODE:      return "declaration_node";
-        case FUNCTION_DEF_NODE:     return "function_definition";
-        case EXTERNAL_DECL_NODE:    return "external_decl";
-        case COMPOUND_STMT_NODE:    return "compound_stmt";
-        case PARAMETER_DECL_NODE:   return "param_decl";
-        case DIRECT_DECL_NODE:      return "direct_decl";
-        case PARAMETER_LIST_NODE:   return "param_list";
-        case PARAM_TYPE_LIST_NODE:  return "param_type_list";
-        case INIT_DECL_LIST_NODE:   return "init_decl_list";
-        case BLOCK_ITEM_LIST_NODE:  return "block_list";
-        case STRUCT_DECL_NODE:      return "struct_decl";
-        case STMT_NODE:             return "stataments";
-        case IF_NODE:               return "if";
-        case WHILE_NODE:            return "while";
-        case DO_WHILE_NODE:         return "do_while";
-        case FOR_NODE:              return "for";
-        case EXPR_NODE:             return "expression";
-        case EMPTY_STMT_NODE:       return ";";
-        case ARG_LIST_NODE:         return "args";
-        case FUNC_CALL_NODE:        return "function_call";
-        case STRUCT_FIELDS_NODE:    return "struct_fields";
-        case GOTO_NODE:             return "goto";
-        case CONTINUE_NODE:         return "continue";
-        case BREAK_NODE:            return "break";
-        case RETURN_NODE:           return "return";
-        case EMPTY_BLOCK_NODE:      return "{}";
-
-        case INT_VAL_NODE:          return "";
-        case CHAR_VAL_NODE:         return "";
-        case FLOAT_VAL_NODE:        return "";
-        case DOUBLE_VAL_NODE:       return "";
-
-        case ASSIGN_NODE:           return "=";
-        case MINUS_NODE:            return "-";
-        case OVER_NODE:             return "/";
-        case PLUS_NODE:             return "+";
-        case TIMES_NODE:            return "*";
-        case MOD_NODE:              return "%";
-        case LOG_EQ_NODE:           return "==";
-        case LOG_NE_NODE:           return "!=";
-        case LOG_LT_NODE:           return "<";
-        case LOG_GT_NODE:           return ">";
-        case LOG_LE_NODE:           return "<=";
-        case LOG_GE_NODE:           return ">=";
-        case LOG_OR_NODE:           return "||";
-        case LOG_AND_NODE:          return "&&";
-        case LOG_NOT_NODE:          return "!";
-        case BIT_OR_NODE:           return "|";
-        case BIT_XOR_NODE:          return "^";
-        case BIT_AND_NODE:          return "&";
-        case BIT_LSH_NODE:          return "<<";
-        case BIT_RSH_NODE:          return ">>";
-        case BIT_NOT_NODE:          return "~";
-
-        case C2I_NODE:              return "c2i";
-        case C2F_NODE:              return "c2f";
-        case C2D_NODE:              return "c2d";
-        case I2C_NODE:              return "i2c";
-        case I2F_NODE:              return "i2f";
-        case I2D_NODE:              return "i2d";
-        case F2C_NODE:              return "f2c";
-        case F2I_NODE:              return "f2i";
-        case F2D_NODE:              return "f2d";
-        case D2C_NODE:              return "d2c";
-        case D2I_NODE:              return "d2i";
-        case D2F_NODE:              return "d2f";
-        
-        default:                    return "ERROR!!";
-    }
-}
 
 int has_data(NodeKind kind) {
     switch(kind) {
@@ -535,64 +400,6 @@ int has_data(NodeKind kind) {
     }
 }
 
-int print_node_dot(AST *node, FILE* ast_file) {
-    int my_nr = nr++;
-
-    fprintf(ast_file, "node%d[label=\"", my_nr);
-    if (node->type != NO_TYPE) {
-        fprintf(ast_file, "(%s) ", type2text(node->type));
-    }
-    if (node->kind == VAR_DECL_NODE || node->kind == VAR_USE_NODE) {
-        fprintf(ast_file, "%s@", get_name(node->scope, node->data.as_int));
-    } else {
-        fprintf(ast_file, "%s", kind2str(node->kind));
-    }
-    if (has_data(node->kind)) {
-        if (node->kind == FLOAT_VAL_NODE) {
-            fprintf(ast_file, "%.2f", node->data.as_float);
-        } else if (node->kind == CHAR_VAL_NODE) {
-            fprintf(ast_file, "@%d", node->data.as_int);
-        } else {
-            fprintf(ast_file, "%d", node->data.as_int);
-        }
-    }
-    fprintf(ast_file, "\"];\n");
-
-    for (int i = 0; i < node->count; i++) {
-        int child_nr = print_node_dot(node->child[i], ast_file);
-        fprintf(ast_file, "node%d -> node%d;\n", my_nr, child_nr);
-    }
-    return my_nr;
-}
-
-void print_dot(AST *tree) {
-    FILE* ast_file = fopen("ast.dot", "w+");
-    nr = 0;
-    fprintf(ast_file, "digraph {\ngraph [ordering=\"out\"];\n");
-    print_node_dot(tree, ast_file);
-    fprintf(ast_file, "}\n");
-    fclose(ast_file);
-}
-
-void show_ast(AST *ast){
-    printf("-------------------\n");
-    printf("        AST\n");
-    printf("Type: %s\n", type2text(ast->type));
-    printf("Kind: %s\n", kind2str(ast->kind));
-    printf("Count: %d\n", ast->count);
-    if(ast->scope){
-        int idx = get_data(ast);
-        printf("Table idx: %d\n", idx);
-        printf("Scope ID: %d\n", ast->scope->id);
-        printf("Name: %s\n", ast->scope->table[idx]->name);
-        printf("Type: %s\n", type2text(ast->scope->table[idx]->type));
-        printf("Line: %d\n", ast->scope->table[idx]->line);
-    }
-    else{
-        printf("Scope: NULL\n");
-    }
-    printf("-------------------\n\n\n");
-}
 
  
 //  + - * /
@@ -678,58 +485,4 @@ Unif get_kinds(Op op, Type lt, Type rt){
     }
 }
 
-char* op2text(Op op){
-    switch(op){
-        case OP_PLUS:         return "+";
-        case OP_MINUS:        return "-";
-        case OP_TIMES:        return "*";
-        case OP_OVER:         return "/";
-        case OP_MOD:          return "%";
-
-        case OP_LT:           return "<";
-        case OP_GT:           return ">";
-        case OP_AND:          return "&&";
-        case OP_OR:           return "||";
-        case OP_LE:           return "<=";
-        case OP_GE:           return ">=";
-        case OP_NE:           return "!=";
-        case OP_EQ:           return "==";
-
-        case OP_XOR:          return "^";
-        case OP_BAND:         return "&";
-        case OP_BOR:          return "|";
-        case OP_RSH:          return ">>";
-        case OP_LSH:          return "<<";
-        case OP_BNOT:         return "~"; 
-        case OP_NOT:          return "!";  
-
-        case OP_ASSIGN:       return "=";
-        case OP_MUL_ASSIGN:   return "*=";
-        case OP_DIV_ASSIGN:   return "/=";
-        case OP_MOD_ASSIGN:   return "%=";
-        case OP_ADD_ASSIGN:   return "+=";
-        case OP_SUB_ASSIGN:   return "-=";
-        case OP_LEFT_ASSIGN:  return "<<=";
-        case OP_RIGHT_ASSIGN: return ">>=";
-        case OP_AND_ASSIGN:   return "&=";
-        case OP_XOR_ASSIGN:   return "^=";
-        case OP_OR_ASSIGN:    return "|=";
-
-        default:
-            printf("op2text: Unknown operator (%d)\n", op);
-            exit(EXIT_FAILURE);
-    }
-}
-
-
-// "!"  // Criar node de negação
-// "~"  // Criar node de negação bitwise
-// "++" // Criar node de soma dentro de um node de atribuição
-// "--" //       ||      sub                ||
-
-
-// "?" ":"
-// "."
-// "->"
-//
 */

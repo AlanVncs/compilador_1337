@@ -28,6 +28,7 @@ typedef enum {
     SWITCH_DEFAULT_NODE,
 
     LABEL_DECL_NODE,
+    VAR_DECL_INIT_NODE,
     VAR_DECL_NODE,
     VAR_USE_NODE,
 
@@ -43,34 +44,36 @@ typedef enum {
     BREAK_NODE,
     RETURN_NODE,
 
-    TIMES_NODE,   // *
-    OVER_NODE,    // /
-    MOD_NODE,     // %
-    PLUS_NODE,    // +
-    MINUS_NODE,   // -
-    BW_LSL_NODE,  // <<
-    BW_LSR_NODE,  // >>
-    BW_AND_NODE,  // &
-    BW_XOR_NODE,  // ^
-    BW_OR_NODE,   // |
-    LT_NODE,      // <
-    GT_NODE,      // >
-    LE_NODE,      // <=
-    GE_NODE,      // >=
-    EQ_NODE,      // ==
-    NE_NODE,      // !=
-    AND_NODE,     // &&
-    OR_NODE,      // ||
-    TERN_OP_NOPE, // ?:
-    ASSIGN_NODE,  // = += -= *= /= %= ^= |= &= >>= <<=
+    CAST_NODE,
+    
+    SIZEOF_NODE,
+    TIMES_NODE,       // *
+    OVER_NODE,        // /
+    MOD_NODE,         // %
+    PLUS_NODE,        // +
+    MINUS_NODE,       // -
+    BW_LSL_NODE,      // <<
+    BW_LSR_NODE,      // >>
+    BW_AND_NODE,      // &
+    BW_XOR_NODE,      // ^
+    BW_OR_NODE,       // |
+    LT_NODE,          // <
+    GT_NODE,          // >
+    LE_NODE,          // <=
+    GE_NODE,          // >=
+    EQ_NODE,          // ==
+    NE_NODE,          // !=
+    AND_NODE,         // &&
+    OR_NODE,          // ||
+    TERN_OP_NOPE,     // ?:
+    ASSIGN_NODE,      // = += -= *= /= %= ^= |= &= >>= <<=
 
-    // TODO Nodes de operadoes unários
-    ADDRESS_NODE// &
-    _NODE// *
-    _NODE// +
-    _NODE// -
-    BW_NOT_NODE, // ~
-    NOT_NODE,    // !
+    ADDRESS_NODE,     // &
+    DEREFERENCE_NODE, // *
+    POSITIVE_NODE,    // +
+    NEGATIVE_NODE,    // -
+    BW_NOT_NODE,      // ~
+    NOT_NODE,         // !
 
     // C2I_NODE,
     // C2F_NODE,
@@ -132,13 +135,14 @@ typedef enum {
 struct data;
 typedef struct ast AST;
 
-// Create
+// Create | Delete
 AST* new_ast(Type type, NodeKind kind, ...);
 AST* clone_ast(AST* source);
 AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...);
+void delete_ast(AST *ast);
 
 // Modify
-void add_ast_child(AST *parent, AST *child);
+AST* add_ast_child(AST *parent, AST *child);
 
 // Test
 int has_float_data(AST* ast);

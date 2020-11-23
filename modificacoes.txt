@@ -1,0 +1,10 @@
+
+- Toda goto label terá escopo global
+
+
+Não implementado (Mas seria bom):
+- Ponteiros
+- Vetores
+- Structs
+- Enums
+- typedef
