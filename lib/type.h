@@ -9,8 +9,8 @@ typedef enum {
     DOUBLE_TYPE,
     VOID_TYPE,
     STRUCT_TYPE,
-    ENUM_TYPE,
-    TYPEDEF_TYPE,
+    // ENUM_TYPE,
+    // TYPEDEF_TYPE,
     NO_TYPE,
     ERR_TYPE
 } Type;

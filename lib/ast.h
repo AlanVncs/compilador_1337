@@ -4,6 +4,7 @@
 #include "type.h"
 
 #define AST_CHILDREN_BLOCK_SIZE 15
+#define VARIABLE_MAX_SIZE 129
 
 // NodeKind
 typedef enum {
@@ -13,11 +14,9 @@ typedef enum {
     FUNCTION_DECL_NODE,
     FUNCTION_DEF_NODE,
     PARAMETER_LIST_NODE,
+    STRUCT_FIELD_LIST_NODE,
     ARGUMENT_LIST_NODE,
     COMPOUND_STMT_NODE,
-
-    // STRUCT_DECL_NODE,
-    // STRUCT_FIELDS_NODE,
 
     IF_NODE,
     WHILE_NODE,
@@ -26,6 +25,9 @@ typedef enum {
     SWITCH_NODE,
     SWITCH_CASE_NODE,
     SWITCH_DEFAULT_NODE,
+
+    STRUCT_VAR_DECL_NODE,
+    STRUCT_DECL_NODE,
 
     VAR_DECL_INIT_NODE,
     VAR_DECL_NODE,
@@ -130,12 +132,13 @@ typedef enum {
 
 } Op;
 
+
 typedef struct ast AST;
 
 // Create | Delete
-AST* new_ast(Type type, NodeKind kind, ...);
+AST* new_ast(Type type, char* name, int line, NodeKind kind, ...);
 AST* clone_ast(AST* source);
-AST* new_ast_subtree(Type type, NodeKind kind, int child_count, ...);
+AST* new_ast_subtree(Type type, char* name, int line, NodeKind kind, int child_count, ...);
 void delete_ast(AST *ast);
 
 // Modify
@@ -147,16 +150,20 @@ int has_data(AST* ast);
 
 // Output
 void gen_ast_dot(AST *ast);
-void gen_node_dot(AST *node, FILE* ast_file);
+void gen_ast_node_dot(AST *node, FILE* ast_file);
 void print_ast(AST *ast);
 
 // Get
 char* get_kind_str(NodeKind kind);
 char* get_op_str(Op op);
 char* get_ast_name(AST* ast);
+Type get_ast_type(AST* ast);
+int get_ast_line(AST* ast);
+AST* get_ast_child(AST* ast, int i);
+int get_ast_length(AST* ast);
 
 // Set
-void set_ast_name(AST* ast, char* name);
+AST* set_ast_kind(AST* ast, NodeKind kind);
 
 
 #endif

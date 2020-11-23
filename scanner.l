@@ -173,5 +173,5 @@ int pp_if_level = 0;
 
 void yyerror (char const *str) {
     printf("SYNTAX ERROR (%d / %s): %s\n", yylineno, yytext, str);
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
