@@ -4,7 +4,7 @@
 #include <string.h>
 #include "ast.h"
 #include "type.h"
-// #include "table.h"
+#include "table.h"
 
 struct ast {
     union {
@@ -18,7 +18,7 @@ struct ast {
     int children_length;
 
     // Scope* scope; TODO remover name
-    char name[128];
+    char name[VARIABLE_MAX_SIZE];
 };
 
 typedef struct {
@@ -225,7 +225,6 @@ char* get_kind_str(NodeKind kind){
         case SWITCH_CASE_NODE:     return "switch_case";
         case SWITCH_DEFAULT_NODE:  return "switch_default";
 
-        case LABEL_DECL_NODE:      return "label_decl";
         case VAR_DECL_INIT_NODE:   return "var_decl_init";
         case VAR_DECL_NODE:        return "var_decl";
         case VAR_USE_NODE:         return "var_use";
@@ -237,7 +236,6 @@ char* get_kind_str(NodeKind kind){
         case STR_VAL_NODE:         return "str_val";
 
         case FUNCTION_CALL_NODE:   return "function_call";
-        case GOTO_NODE:            return "goto";
         case CONTINUE_NODE:        return "continue";
         case BREAK_NODE:           return "break";
         case RETURN_NODE:          return "return";

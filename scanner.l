@@ -28,7 +28,7 @@ WS  [ \t\v\n\f]
 #include "lib/ast.h"
 
 extern int sym_type(char* id);
-extern char last_id[129];
+extern char last_id[];
 
 int pp_if_level = 0;
 %}

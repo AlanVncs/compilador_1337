@@ -7,12 +7,12 @@ typedef enum {
     INT_TYPE,
     FLOAT_TYPE,
     DOUBLE_TYPE,
-    LABEL_TYPE,
     VOID_TYPE,
+    STRUCT_TYPE,
+    ENUM_TYPE,
+    TYPEDEF_TYPE,
     NO_TYPE,
     ERR_TYPE
-    // STRUCT_TYPE,
-    // EXPR_TYPE,
 } Type;
 
 const char* get_type_str(Type type);

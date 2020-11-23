@@ -27,7 +27,6 @@ typedef enum {
     SWITCH_CASE_NODE,
     SWITCH_DEFAULT_NODE,
 
-    LABEL_DECL_NODE,
     VAR_DECL_INIT_NODE,
     VAR_DECL_NODE,
     VAR_USE_NODE,
@@ -39,7 +38,6 @@ typedef enum {
     STR_VAL_NODE,
 
     FUNCTION_CALL_NODE,
-    GOTO_NODE,
     CONTINUE_NODE,
     BREAK_NODE,
     RETURN_NODE,
@@ -132,7 +130,6 @@ typedef enum {
 
 } Op;
 
-struct data;
 typedef struct ast AST;
 
 // Create | Delete

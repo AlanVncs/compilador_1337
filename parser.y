@@ -10,7 +10,7 @@
 #include <string.h>
 #include "lib/ast.h"
 #include "lib/type.h"
-// #include "lib/table.h"
+#include "lib/table.h"
 
 extern int yylex(void);
 extern void yyerror(char const* str);
@@ -22,7 +22,7 @@ extern char* yytext;
 AST* build_assign_ast(Op op, AST* l_ast, AST* r_ast);
 
 
-char last_id[129];
+char last_id[VARIABLE_MAX_SIZE];
 
 AST* root_ast = NULL;
 AST* last_param_list = NULL;
@@ -502,9 +502,9 @@ statement:
 ;
 
 labeled_statement:
-    IDENTIFIER { $$=new_ast(LABEL_TYPE, VAR_DECL_NODE, 0); set_ast_name($$, last_id);} ':' statement { $$=new_ast_subtree(NO_TYPE, LABEL_DECL_NODE, 2, $2, $4); }
-  | CASE constant_expression ':' statement                                                           { $$=new_ast_subtree(NO_TYPE, SWITCH_CASE_NODE, 2, $2, $4); }
-  | DEFAULT ':' statement                                                                            { $$=new_ast_subtree(NO_TYPE, SWITCH_DEFAULT_NODE, 1, $3); }
+    IDENTIFIER ':' statement
+  | CASE constant_expression ':' statement { $$=new_ast_subtree(NO_TYPE, SWITCH_CASE_NODE, 2, $2, $4); }
+  | DEFAULT ':' statement                  { $$=new_ast_subtree(NO_TYPE, SWITCH_DEFAULT_NODE, 1, $3); }
 ;
 
 compound_statement:
@@ -543,7 +543,7 @@ iteration_statement:
 ;
 
 jump_statement:            
-    GOTO IDENTIFIER ';'   { AST* label=new_ast(LABEL_TYPE, VAR_USE_NODE, 0); set_ast_name(label, last_id); $$=new_ast_subtree(NO_TYPE, GOTO_NODE, 1, label); }
+    GOTO IDENTIFIER ';'
   | CONTINUE ';'          { $$=new_ast(NO_TYPE, CONTINUE_NODE, 0); }
   | BREAK ';'             { $$=new_ast(NO_TYPE, BREAK_NODE, 0); }
   | RETURN ';'            { $$=new_ast(NO_TYPE, RETURN_NODE, 0); }
