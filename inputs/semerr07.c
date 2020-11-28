@@ -1,21 +1,11 @@
 #include <stdio.h>
 
-// SEMANTIC ERROR (12): redefinition of ‘fatorial’ (previous definition of 'fatorial' at line 5).
+//SEMANTIC ERROR (7): 'fatorial' redeclared as different kind of symbol (previous declaration of 'fatorial' at line 5).
 
-int fatorial(int n){
-    if(n<=0)
-        return 1;
-    else
-        return n*fatorial(n-1);
-}
+int fatorial(int);
 
-int fatorial(int n){
-    if(n<=0)
-        return 1;
-    else
-        return n*fatorial(n-1);
-}
+int fatorial;
 
 int main(){
-    return fatoriall(5);
+    return fatorial(5);
 }

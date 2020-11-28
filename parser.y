@@ -1258,7 +1258,7 @@ void incompatible_types_op(int current_line, char* operator, char* l_type, char*
     exit(0);
 }
 
-// ! ~ + -
+// ~ ! + -
 void incompatible_type_op(int current_line, char* operator, char* expr_type){
     printf("SEMANTIC ERROR (%d): incompatible type for operator '%s', expression type is '%s'.\n", current_line, operator, expr_type);
     exit(0);

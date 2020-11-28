@@ -23,7 +23,7 @@ main:
 	@./apagar
 	@rm -rf apagar
 
-asm compile:
+asm: compile
 	@nasm -f elf32 out.asm
 	gcc -m32 -o out out.o && ./out
 

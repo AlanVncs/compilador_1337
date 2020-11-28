@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-// SEMANTIC ERROR (7): called object ‘fatorial’ is not a function or function pointer (previous declaration of 'fatorial' at line 3).
-
-int fatorial;
+// SEMANTIC ERROR (7): incompatible type for operator '~', expression type is 'float'.
 
 int main(){
-    return fatorial(5);
+
+    float g = ~5.9;
+    return 0;
 }

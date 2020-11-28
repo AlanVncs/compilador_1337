@@ -1,8 +1,8 @@
 #include <stdio.h>
-// SEMANTIC ERROR (7): too many arguments to function fatorial.
 
-int fatorial(int);
+// SEMANTIC ERROR (7): incompatible types for operator '>>', LHS is 'int' and RHS is 'float'.
+
 
 int main(){
-    return fatorial(5, 4);;
+    return 1>>1.9;
 }

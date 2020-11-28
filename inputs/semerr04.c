@@ -1,8 +1,8 @@
 #include <stdio.h>
-// SEMANTIC ERROR (7): 'fatorial' was not declared.
+// SEMANTIC ERROR (7): too many arguments to function fatorial.
 
-// int fatorial(int);
+int fatorial(int);
 
 int main(){
-    return fatorial(5);;
+    return fatorial(5, 4);;
 }

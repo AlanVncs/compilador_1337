@@ -1,8 +1,9 @@
 #include <stdio.h>
 
-// SEMANTIC ERROR (7): incompatible types for operator '>>', LHS is 'int' and RHS is 'float'.
-
+// SEMANTIC ERROR (7): invalid operand for operator '&'.
 
 int main(){
-    return 1>>1.9;
+
+    float g = &199;
+    return 0;
 }
