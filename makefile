@@ -24,4 +24,4 @@ main:
 	@rm -rf apagar
 
 clean:
-	@rm -rf compilador.bin parser.c parser.h scanner.c compiler.bin ast.dot ast.pdf
+	@rm -rf compilador.bin parser.c parser.h scanner.c compiler.bin ast.dot ast.pdf table.dot table.pdf

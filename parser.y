@@ -900,7 +900,6 @@ void build_scope_switch_stmt(AST* switch_stmt, Scope* current_scope){
 void build_scope_switch_case_stmt(AST* switch_case_stmt, Scope* current_scope){
     AST* constant_expression = get_ast_child(switch_case_stmt, 0);
     eval(constant_expression, current_scope);
-    // TODO Criar nó de conversão para valor testado no switch
     AST* stmt = get_ast_child(switch_case_stmt, 1);
     build_scope_stmt(stmt, current_scope);
 }
