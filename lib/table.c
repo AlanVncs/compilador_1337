@@ -39,6 +39,15 @@ Scope* new_child_scope(Scope* parent){
     return child;
 }
 
+void delete_scope(Scope* scope){
+    for(int i=0; i<scope->children_length; i++){
+        delete_scope(scope->children[i]);
+    }
+    free(scope->table);
+    free(scope->children);
+    free(scope);
+}
+
 
 // Modify
 int add_scope(Scope* parent, Scope* child) {
@@ -71,10 +80,6 @@ void replace_scope_ast(Scope* scope, AST* new_ast, AST* old_ast){
             return;
         }
     }
-    
-    // TODO Remover: Este erro não deve ocorrer nunca
-    printf("replace_scope_ast: old_ast not found\n");
-    exit(EXIT_FAILURE);
 }
 
 
@@ -154,101 +159,6 @@ AST* lookup_outter_scope_ast(Scope* scope, AST* ast){
     return found_ast;
 }
 
-// typedef enum {
-//     VAR_ID,
-//     FUNC_ID,
-//     STRUCT_ID,
-//     ENUM_ID
-// } VarType;
-
-// typedef struct {
-//     char name[VARIABLE_MAX_SIZE];
-//     Type type;
-//     int line;
-// } VarEntry;
-
-// typedef struct {
-//     char name[VARIABLE_MAX_SIZE];
-//     Type type;
-//     int line;
-// } VarEntry;
-
-
-
-
-
-// void destroy_entry(Entry *entry){
-//     if (entry)
-//         free(entry);
-// }
-
-// void destroy_table(Scope *scope){
-//     int entryNum=scope->table_length;
-//     // int scopeNum=scope->children_length;
-//     for (int i=0; i<entryNum; i++){
-//         destroy_entry(scope->table[i]);
-//     }
-//     free(scope->table);
-// }
-
-// void destroy_scope(Scope *scope){
-//     if (!scope) return;
-//     destroy_table(scope);
-//     int scopeNum=scope->children_length;
-//     for (int i=0; i<scopeNum; i++)
-//         destroy_scope(scope->children[i]);
-//     free(scope->children);
-//     free(scope);
-// }
-
-// int lookupVar(Scope* scope, char* name) {
-//     if (scope==NULL) return -1;
-//     for (int i = 0; i < scope->table_length; i++) {
-//         if (strcmp(scope->table[i]->name, name) == 0) {
-//             return i;
-//         }
-//     }
-//     return -1;
-// }
-
-// VarLoc get_var_loc(Scope *scope, char *name){
-//     int idx;
-//     while (idx=lookupVar(scope, name), scope != NULL){
-//         if (idx!=-1) return (VarLoc){idx, scope};
-//         scope=scope->parent;
-//     }
-//     return (VarLoc){-1, NULL};
-// }
-
-// int lookupVar_outter_scope(Scope *scope, char *name){
-//     VarLoc varLoc=get_var_loc(scope, name);
-//     return varLoc.varIdx;
-// }
-
-// Scope *get_decl_scope(Scope *scope, char *name){
-//     VarLoc varLoc=get_var_loc(scope, name);
-//     return varLoc.varDeclScope;
-// }
-
-// char *get_name(Scope *scope, int i){
-//     return scope->table[i]->name;
-// }
-
-// Type get_type(Scope *scope, int i){
-//     return scope->table[i]->type;
-// }
-
-// void printTable(Scope* scope) {
-//     if(!scope) return;
-//     printf("\nScope ID %d:\n", scope->id);
-//     for (int i=0; i<scope->table_length; i++) {
-//         Entry* entry = scope->table[i];
-//         printf("Entry %d -- name: %s, line: %d, type: %s\n", i, entry->name, entry->line, type2text(entry->type));
-//     }
-//     printf("\n\n");
-// }
 
 
 // TODO String Table
-
-// TODO Free

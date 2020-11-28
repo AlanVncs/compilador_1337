@@ -372,41 +372,44 @@ char* get_kind_str(NodeKind kind){
 
 char* get_op_str(Op op){
     switch(op){
-        case OP_PLUS:       return "+";
-        case OP_MINUS:      return "-";
-        case OP_TIMES:      return "/";
-        case OP_OVER:       return "*";
-        case OP_MOD:        return "%";
+        case OP_PLUS:        return "+";
+        case OP_MINUS:       return "-";
+        case OP_TIMES:       return "/";
+        case OP_OVER:        return "*";
+        case OP_MOD:         return "%";
 
-        case OP_LT:         return "<";
-        case OP_GT:         return ">";
-        case OP_LE:         return "<=";
-        case OP_GE:         return ">=";
-        case OP_EQ:         return "==";
-        case OP_NE:         return "!=";
+        case OP_LT:          return "<";
+        case OP_GT:          return ">";
+        case OP_LE:          return "<=";
+        case OP_GE:          return ">=";
+        case OP_EQ:          return "==";
+        case OP_NE:          return "!=";
 
-        case OP_AND:        return "&&";
-        case OP_OR:         return "||";
-        case OP_NOT:        return "!";
+        case OP_AND:         return "&&";
+        case OP_OR:          return "||";
+        case OP_NOT:         return "!";
 
-        case OP_BW_XOR:     return "^";
-        case OP_BW_AND:     return "&";
-        case OP_BW_OR:      return "|";
-        case OP_BW_LSR:     return ">>";
-        case OP_BW_LSL:     return "<<";
-        case OP_BW_NOT:     return "~";
+        case OP_BW_XOR:      return "^";
+        case OP_BW_AND:      return "&";
+        case OP_BW_OR:       return "|";
+        case OP_BW_LSR:      return ">>";
+        case OP_BW_LSL:      return "<<";
+        case OP_BW_NOT:      return "~";
 
-        case OP_ASSIGN:     return "=";
-        case OP_MUL_ASSIGN: return "*=";
-        case OP_DIV_ASSIGN: return "/=";
-        case OP_MOD_ASSIGN: return "%=";
-        case OP_ADD_ASSIGN: return "+=";
-        case OP_SUB_ASSIGN: return "-=";
-        case OP_LSL_ASSIGN: return "<<=";
-        case OP_LSR_ASSIGN: return ">>=";
-        case OP_AND_ASSIGN: return "&=";
-        case OP_XOR_ASSIGN: return "^=";
-        case OP_OR_ASSIGN:  return "|=";
+        case OP_ADDRESS:     return "&";
+        case OP_DEREFERENCE: return "*";
+
+        case OP_ASSIGN:      return "=";
+        case OP_MUL_ASSIGN:  return "*=";
+        case OP_DIV_ASSIGN:  return "/=";
+        case OP_MOD_ASSIGN:  return "%=";
+        case OP_ADD_ASSIGN:  return "+=";
+        case OP_SUB_ASSIGN:  return "-=";
+        case OP_LSL_ASSIGN:  return "<<=";
+        case OP_LSR_ASSIGN:  return ">>=";
+        case OP_AND_ASSIGN:  return "&=";
+        case OP_XOR_ASSIGN:  return "^=";
+        case OP_OR_ASSIGN:   return "|=";
 
         default:
             printf("op2text: Unknown operator (%d)\n", op);
@@ -449,28 +452,31 @@ Op get_ast_op(AST* operation){
     if(!operation) printf("get_ast_op: operation null\n");
 
     switch (operation->kind){
-        case PLUS_NODE:   return OP_PLUS;   // +
-        case MINUS_NODE:  return OP_MINUS;  // -
-        case OVER_NODE:   return OP_OVER;   // *
-        case TIMES_NODE:  return OP_TIMES;  // /
+        case PLUS_NODE:        return OP_PLUS;        // +
+        case MINUS_NODE:       return OP_MINUS;       // -
+        case OVER_NODE:        return OP_OVER;        // *
+        case TIMES_NODE:       return OP_TIMES;       // /
 
-        case LT_NODE:     return OP_LT;     // <
-        case GT_NODE:     return OP_GT;     // >
-        case AND_NODE:    return OP_AND;    // &&
-        case OR_NODE:     return OP_OR;     // ||
-        case LE_NODE:     return OP_LE;     // <=
-        case GE_NODE:     return OP_GE;     // >=
-        case EQ_NODE:     return OP_EQ;     // ==
-        case NE_NODE:     return OP_NE;     // !=
+        case LT_NODE:          return OP_LT;          // <
+        case GT_NODE:          return OP_GT;          // >
+        case AND_NODE:         return OP_AND;         // &&
+        case OR_NODE:          return OP_OR;          // ||
+        case LE_NODE:          return OP_LE;          // <=
+        case GE_NODE:          return OP_GE;          // >=
+        case EQ_NODE:          return OP_EQ;          // ==
+        case NE_NODE:          return OP_NE;          // !=
 
-        case BW_XOR_NODE: return OP_BW_XOR; // ^
-        case BW_AND_NODE: return OP_BW_AND; // &
-        case BW_OR_NODE:  return OP_BW_OR;  // |
-        case BW_LSR_NODE: return OP_BW_LSR; // >>
-        case BW_LSL_NODE: return OP_BW_LSL; // <<
-        case MOD_NODE:    return OP_MOD;    // %
+        case BW_XOR_NODE:      return OP_BW_XOR;      // ^
+        case BW_AND_NODE:      return OP_BW_AND;      // &
+        case BW_OR_NODE:       return OP_BW_OR;       // |
+        case BW_LSR_NODE:      return OP_BW_LSR;      // >>
+        case BW_LSL_NODE:      return OP_BW_LSL;      // <<
+        case MOD_NODE:         return OP_MOD;         // %
 
-        case ASSIGN_NODE: return OP_ASSIGN; // =
+        case ADDRESS_NODE:     return OP_ADDRESS;     // &
+        case DEREFERENCE_NODE: return OP_DEREFERENCE; // *
+
+        case ASSIGN_NODE:      return OP_ASSIGN;      // =
         
         default: printf("get_ast_op: Error"); exit(EXIT_FAILURE); break;
     }
@@ -585,140 +591,3 @@ AST* set_ast_type(AST* ast, Type type){
     return ast;
 }
 
-
-
-// void free_tree(AST *tree);
-// NodeKind get_kind(AST *node);
-// int get_data(AST *node);
-// void set_float_data(AST *node, float data);
-// float get_float_data(AST *node);
-// Type get_node_type(AST *node);
-// int get_child_count(AST *node);
-// void set_scope(AST *node, Scope *scope);
-// Unif get_kinds(Op op, Type lt, Type rt);
-
-
-/*
-
-AST* get_first_child(AST* ast){
-    return ast->child[0];
-}
-
-// Remove a variavle de uma var_decl_list
-Entry *remove_var(Scope *scope, int idx){
-
-    Entry *removed = scope->table[idx];
-    int length = scope->table_length;
-
-    for(int i=idx; i<length-1; i++){
-        scope->table[i] = scope->table[i+1];
-    }
-    scope->table_length--;
-    
-    return removed;
-}
-
-//----------------------------------------------
-
-int nr;
-
-int has_data(NodeKind kind) {
-    switch(kind) {
-        case INT_VAL_NODE:
-        case DOUBLE_VAL_NODE:
-        case FLOAT_VAL_NODE:
-        case CHAR_VAL_NODE:
-        case VAR_DECL_NODE:
-        case VAR_USE_NODE:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
-
- 
-//  + - * /
-static const Unif tableA[4][4] = {
-    //          int    char    float    double
-    //    int   int    int     float    double
-    //   char   int    char    float    double
-    //  float   float  float   float    double
-    // double   double double  double   double
-    {{INT_TYPE, NONE, NONE},        {INT_TYPE, NONE, C2I_NODE},    {FLOAT_TYPE, I2F_NODE, NONE},  {DOUBLE_TYPE, I2D_NODE, NONE}},
-    {{INT_TYPE, C2I_NODE, NONE},    {CHAR_TYPE, NONE, NONE},       {FLOAT_TYPE, C2F_NODE, NONE},  {DOUBLE_TYPE, C2D_NODE, NONE}},
-    {{FLOAT_TYPE, NONE, I2F_NODE},  {FLOAT_TYPE, NONE, C2F_NODE},  {FLOAT_TYPE, NONE, NONE},      {DOUBLE_TYPE, F2D_NODE, NONE}},
-    {{DOUBLE_TYPE, NONE, I2D_NODE}, {DOUBLE_TYPE, NONE, C2D_NODE}, {DOUBLE_TYPE, NONE, F2D_NODE}, {DOUBLE_TYPE, NONE, NONE}}
-};
-
-// < > && || <= >= == !=
-static const Unif tableB[4][4] = {
-    //          int    char    float    double
-    //    int   int    int     int      int
-    //   char   int    int     int      int
-    //  float   int    int     int      int
-    // double   int    int     int      int
-    {{INT_TYPE, NONE, NONE},     {INT_TYPE, NONE, C2I_NODE}, {INT_TYPE, I2F_NODE, NONE}, {INT_TYPE, I2D_NODE, NONE}},
-    {{INT_TYPE, C2I_NODE, NONE}, {INT_TYPE, NONE, NONE},     {INT_TYPE, C2F_NODE, NONE}, {INT_TYPE, C2D_NODE, NONE}},
-    {{INT_TYPE, NONE, I2F_NODE}, {INT_TYPE, NONE, C2F_NODE}, {INT_TYPE, NONE, NONE},     {INT_TYPE, F2D_NODE, NONE}},
-    {{INT_TYPE, NONE, I2D_NODE}, {INT_TYPE, NONE, C2D_NODE},  {INT_TYPE, NONE, F2D_NODE}, {INT_TYPE, NONE, NONE}}
-};
-
-// ^ & | >> << %
-static const Unif tableC[4][4] = {
-    //          int    char    float    double
-    //    int   int    int     err      err
-    //   char   int    int     err      err
-    //  float   err    err     err      err
-    // double   err    err     err      err
-    {{INT_TYPE, NONE, NONE},     {INT_TYPE, NONE, C2I_NODE}, {ERR_TYPE, NONE, NONE}, {ERR_TYPE, NONE, NONE}},
-    {{INT_TYPE, C2I_NODE, NONE}, {INT_TYPE, NONE, NONE},     {ERR_TYPE, NONE, NONE}, {ERR_TYPE, NONE, NONE}},
-    {{ERR_TYPE, NONE, NONE},     {ERR_TYPE, NONE, NONE},     {ERR_TYPE, NONE, NONE}, {ERR_TYPE, NONE, NONE}},
-    {{ERR_TYPE, NONE, NONE},     {ERR_TYPE, NONE, NONE},     {ERR_TYPE, NONE, NONE}, {ERR_TYPE, NONE, NONE}}
-};
-
-// =
-static const Unif tableD[4][4] = {
-    //          int    char    float    double
-    //    int   int    int     int      int
-    //   char   char   char    char     char
-    //  float   float  float   float    float
-    // double   double double  double   double
-    {{INT_TYPE, NONE, NONE},        {INT_TYPE, NONE, C2I_NODE},    {INT_TYPE, NONE, F2I_NODE},    {INT_TYPE, NONE, D2I_NODE}},
-    {{CHAR_TYPE, NONE, I2C_NODE},   {CHAR_TYPE, NONE, NONE},       {CHAR_TYPE, NONE, F2C_NODE},   {CHAR_TYPE, NONE, D2C_NODE}},
-    {{FLOAT_TYPE, NONE, I2F_NODE},  {FLOAT_TYPE, NONE, C2F_NODE},  {FLOAT_TYPE, NONE, NONE},      {FLOAT_TYPE, NONE, D2F_NODE}},
-    {{DOUBLE_TYPE, NONE, I2D_NODE}, {DOUBLE_TYPE, NONE, C2D_NODE}, {DOUBLE_TYPE, NONE, F2D_NODE}, {DOUBLE_TYPE, NONE, NONE}}
-};
-
-Unif get_kinds(Op op, Type lt, Type rt){
-    switch(op){
-        case OP_PLUS: 
-        case OP_MINUS:
-        case OP_TIMES:
-        case OP_OVER:   return tableA[lt][rt];
-
-        case OP_LT:
-        case OP_GT:
-        case OP_AND:
-        case OP_OR:
-        case OP_LE:
-        case OP_GE:
-        case OP_NE:
-        case OP_EQ:     return tableB[lt][rt];
-
-        case OP_XOR:
-        case OP_BAND:
-        case OP_BOR:
-        case OP_RSH:
-        case OP_LSH:
-        case OP_MOD:    return tableC[lt][rt];
-
-        case OP_ASSIGN: return tableD[lt][rt];
-
-        default:
-            printf("get_kinds: Error - Unknown operator %s\n", op2text(op));
-            exit(EXIT_FAILURE);
-    }
-}
-
-*/

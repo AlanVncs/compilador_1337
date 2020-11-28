@@ -128,17 +128,17 @@ unary_expression:
   | DEC_OP unary_expression        { $$=build_assign_ast(OP_SUB_ASSIGN, $2, new_ast(INT_TYPE, NULL, yylineno, INT_VAL_NODE, 1)); }
   | unary_operator cast_expression { $$=add_ast_child($1, $2); }
   | SIZEOF unary_expression        { $$=new_ast_subtree(NO_TYPE, NULL, yylineno, SIZEOF_NODE, 1, $2); }
-  | SIZEOF '(' type_name ')'       { $$=new_ast(last_decl_type, NULL, yylineno, SIZEOF_NODE, 0); }
+  | SIZEOF '(' type_name ')'       { $$=new_ast(NO_TYPE, NULL, yylineno, SIZEOF_NODE, 1, new_ast(last_decl_type, NULL, yylineno, VAR_DECL_NODE, 0)); }
   | ALIGNOF '(' type_name ')'      /* Ignorado */
 ;
 
 unary_operator:
-    '&'     { $$=new_ast(NO_TYPE, NULL, yylineno, ADDRESS_NODE, 0); }
-  | '*'     { $$=new_ast(NO_TYPE, NULL, yylineno, DEREFERENCE_NODE, 0); }
-  | '+'     { $$=new_ast(NO_TYPE, NULL, yylineno, POSITIVE_NODE, 0); }
-  | '-'     { $$=new_ast(NO_TYPE, NULL, yylineno, NEGATIVE_NODE, 0); }
-  | '~'     { $$=new_ast(NO_TYPE, NULL, yylineno, BW_NOT_NODE, 0); }
-  | '!'     { $$=new_ast(NO_TYPE, NULL, yylineno, NOT_NODE, 0); }
+    '&'         { $$=new_ast(NO_TYPE, NULL, yylineno, ADDRESS_NODE, 0); }
+  | '*'         { $$=new_ast(NO_TYPE, NULL, yylineno, DEREFERENCE_NODE, 0); }
+  | '+'         { $$=new_ast(NO_TYPE, NULL, yylineno, POSITIVE_NODE, 0); }
+  | '-'         { $$=new_ast(NO_TYPE, NULL, yylineno, NEGATIVE_NODE, 0); }
+  | '~'         { $$=new_ast(NO_TYPE, NULL, yylineno, BW_NOT_NODE, 0); }
+  | '!'         { $$=new_ast(NO_TYPE, NULL, yylineno, NOT_NODE, 0); }
 ;
 
 cast_expression:
@@ -594,7 +594,16 @@ void build_scope_for_stmt(AST* for_stmt, Scope* current_scope);
 void build_scope_var_decl(AST* var_decl, Scope* current_scope);
 
 Type eval(AST* expression, Scope* current_scope);
-Type eval_tern_operation(AST* expression, Scope* current_scope);
+Type eval_tern_op(AST* tern_op, Scope* current_scope);
+Type eval_cast(AST* cast, Scope* current_scope);
+Type eval_positive(AST* positive, Scope* current_scope);
+Type eval_negative(AST* negative, Scope* current_scope);
+Type eval_bw_not(AST* bw_not, Scope* current_scope);
+Type eval_not(AST* not, Scope* current_scope);
+Type eval_sizeof(AST* sizeof_, Scope* current_scope);
+Type eval_address(AST* address, Scope* current_scope);
+Type eval_dereference(AST* dereference, Scope* current_scope);
+Type eval_tern_op(AST* tern_op, Scope* current_scope);
 Type eval_function_call(AST* function_call, Scope* current_scope);
 Type eval_var_use(AST* var_use, Scope* current_scope);
 Type eval_expression(AST* expression, Scope* current_scope);
@@ -612,11 +621,15 @@ void undeclared(int current_line, char* name);
 void too_x_argmuments(int current_line, char* name, int diff);
 void not_a_function(int current_line, char* name, int prev_line);
 void incompatible_types_op(int current_line, char* operator, char* l_type, char* r_type);
+void incompatible_type_op(int current_line, char* operator, char* expr_type);
+void invalid_operand(int current_line, char* operator);
 
 int main(void) {
     yyparse();
-    gen_scope_dot(build_scope_tree());
+    Scope* scope = build_scope_tree();
+    gen_scope_dot(scope);
     gen_ast_dot(root_ast);
+    delete_scope(scope);
     delete_ast(root_ast);
     yylex_destroy();
     return 0;
@@ -974,21 +987,28 @@ void build_scope_for_stmt(AST* for_stmt, Scope* current_scope){
 
 Type eval(AST* expression, Scope* current_scope){
 
-    /* case CAST_NODE: */
-    /* case ADDRESS_NODE: break;     // Implementar junto com ponteiros */
-    /* case DEREFERENCE_NODE: break; // Implementar junto com ponteiros */
-    /* case POSITIVE_NODE: break; */
-    /* case NEGATIVE_NODE: break; */
-    /* case BW_NOT_NODE: break; */
-    /* case NOT_NODE: break; */
-    /* case SIZEOF_NODE: break; */
-
     if(!expression) return ERR_TYPE;
 
-    // TODO Expression list
     NodeKind kind = get_ast_kind(expression);
     switch(kind){
-        case TERN_OP_NODE: return eval_tern_operation(expression, current_scope);
+
+        case TERN_OP_NODE: return eval_tern_op(expression, current_scope);
+
+        case CAST_NODE: return eval_cast(expression, current_scope);
+
+        case POSITIVE_NODE: return eval_positive(expression, current_scope);
+
+        case NEGATIVE_NODE: return eval_negative(expression, current_scope);
+
+        case BW_NOT_NODE: return eval_bw_not(expression, current_scope);
+
+        case NOT_NODE: return eval_not(expression, current_scope);
+
+        case SIZEOF_NODE: return eval_sizeof(expression, current_scope);
+
+        case ADDRESS_NODE: return eval_address(expression, current_scope);
+        
+        case DEREFERENCE_NODE: return eval_dereference(expression, current_scope);
             
         case FUNCTION_CALL_NODE: return eval_function_call(expression, current_scope);
 
@@ -998,17 +1018,20 @@ Type eval(AST* expression, Scope* current_scope){
 
         case INT_VAL_NODE:
         case CHAR_VAL_NODE:
-        case FLOAT_VAL_NODE: return get_ast_type(expression);
+        case FLOAT_VAL_NODE:
+        case VAR_DECL_NODE:  return get_ast_type(expression);
         
+        // Operações comuns com 2 operandos (+ - * / % > etc)
         default: eval_operation(expression, current_scope); return get_ast_type(expression);
     }   
 }
 
-Type eval_tern_operation(AST* tern_operation, Scope* current_scope){
+// test_expr ? if_expr : else_expr
+Type eval_tern_op(AST* tern_op, Scope* current_scope){
     
-    AST* test_expr = get_ast_child(tern_operation, 0);
-    AST* if_expr = get_ast_child(tern_operation, 1);
-    AST* else_expr = get_ast_child(tern_operation, 2);
+    AST* test_expr = get_ast_child(tern_op, 0);
+    AST* if_expr = get_ast_child(tern_op, 1);
+    AST* else_expr = get_ast_child(tern_op, 2);
 
     eval(test_expr, current_scope);
     Type if_expr_type = eval(if_expr, current_scope);
@@ -1017,13 +1040,83 @@ Type eval_tern_operation(AST* tern_operation, Scope* current_scope){
     Type max_type = get_type_max(if_expr_type, else_expr_type);
     
     // Converte as expressões se necessário
-    set_ast_child(tern_operation, 0, build_ast_conv(test_expr, INT_TYPE));
-    set_ast_child(tern_operation, 1, build_ast_conv(if_expr, max_type));
-    set_ast_child(tern_operation, 2, build_ast_conv(else_expr, max_type));
+    set_ast_child(tern_op, 0, build_ast_conv(test_expr, INT_TYPE));
+    set_ast_child(tern_op, 1, build_ast_conv(if_expr, max_type));
+    set_ast_child(tern_op, 2, build_ast_conv(else_expr, max_type));
 
-    set_ast_type(tern_operation, max_type);
+    set_ast_type(tern_op, max_type);
 
     return max_type;
+}
+
+// (type) expr
+Type eval_cast(AST* cast, Scope* current_scope){
+    AST* expr = get_ast_child(cast, 0);
+    eval(expr, current_scope);
+    Type cast_type = get_ast_type(cast);
+    AST* expr_conv = build_ast_conv(expr, cast_type);
+    set_ast_child(cast, 0, expr_conv);
+    return cast_type;
+}
+
+// +expr
+Type eval_positive(AST* positive, Scope* current_scope){
+    AST* expr = get_ast_child(positive, 0);
+    Type expr_type = eval(expr, current_scope);
+    set_ast_type(positive, expr_type);
+    return expr_type;
+}
+
+// -expr
+Type eval_negative(AST* negative, Scope* current_scope){
+    AST* expr = get_ast_child(negative, 0);
+    Type expr_type = eval(expr, current_scope);
+    set_ast_type(negative, expr_type);
+    return expr_type;
+}
+
+// ~expr
+Type eval_bw_not(AST* bw_not, Scope* current_scope){
+    AST* expr = get_ast_child(bw_not, 0);
+    Type expr_type = eval(expr, current_scope);
+    if(expr_type == FLOAT_TYPE || expr_type == DOUBLE_TYPE)
+        incompatible_type_op(get_ast_line(bw_not), get_op_str(OP_BW_NOT), get_type_str(expr_type));
+    set_ast_type(bw_not, INT_TYPE);
+    return INT_TYPE;
+}
+
+// !expr
+Type eval_not(AST* not, Scope* current_scope){
+    AST* expr = get_ast_child(not, 0);
+    eval(expr, current_scope);
+    set_ast_type(not, INT_TYPE);
+    return INT_TYPE;
+}
+
+// sizeof(expr)
+Type eval_sizeof(AST* sizeof_, Scope* current_scope){
+    AST* expr = get_ast_child(sizeof_, 0);
+    eval(expr, current_scope);
+    set_ast_type(sizeof_, INT_TYPE);
+    return INT_TYPE;
+}
+
+// &expr - Só funcionará se/quando ponteiros forem implementados
+Type eval_address(AST* address, Scope* current_scope){
+    AST* expr = get_ast_child(address, 0);
+    if(get_ast_kind(expr) != VAR_USE_NODE) invalid_operand(get_ast_line(address), get_op_str(OP_ADDRESS));
+    Type expr_type = eval(expr, current_scope);
+    set_ast_type(address, expr_type); // TODO Ponteiro para o tipo da expressão
+    return expr_type;
+}
+
+// *expr - Só funcionará se/quando ponteiros forem implementados
+Type eval_dereference(AST* dereference, Scope* current_scope){
+    AST* expr = get_ast_child(dereference, 0);
+    if(get_ast_kind(expr) != VAR_USE_NODE) invalid_operand(get_ast_line(dereference), get_op_str(OP_DEREFERENCE));
+    Type expr_type = eval(expr, current_scope);
+    set_ast_type(dereference, expr_type); // TODO Ponteiro para o tipo da expressão
+    return expr_type;
 }
 
 Type eval_function_call(AST* function_call, Scope* current_scope){
@@ -1159,8 +1252,21 @@ void not_a_function(int current_line, char* name, int prev_line){
     exit(0);
 }
 
+// + - * / % >...
 void incompatible_types_op(int current_line, char* operator, char* l_type, char* r_type){
     printf("SEMANTIC ERROR (%d): incompatible types for operator '%s', LHS is '%s' and RHS is '%s'.\n", current_line, operator, l_type, r_type);
+    exit(0);
+}
+
+// ! ~ + -
+void incompatible_type_op(int current_line, char* operator, char* expr_type){
+    printf("SEMANTIC ERROR (%d): incompatible type for operator '%s', expression type is '%s'.\n", current_line, operator, expr_type);
+    exit(0);
+}
+
+// & *
+void invalid_operand(int current_line, char* operator){
+    printf("SEMANTIC ERROR (%d): invalid operand for operator '%s'.\n", current_line, operator);
     exit(0);
 }
 

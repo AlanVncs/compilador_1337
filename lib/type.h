@@ -4,6 +4,7 @@
 
 // Não modificar a ordem dos tipos char, int, float e double!!!
 typedef enum {
+    // TODO Se sobrar tempo, criar string como tipo primitivo
     CHAR_TYPE,
     INT_TYPE,
     FLOAT_TYPE,

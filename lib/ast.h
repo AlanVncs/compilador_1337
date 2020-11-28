@@ -95,41 +95,44 @@ typedef enum {
 
 // Op
 typedef enum {
-    OP_PLUS,         // +
-    OP_MINUS,        // -
-    OP_TIMES,        // /
-    OP_OVER,         // *
-    OP_MOD,          // %
+    OP_PLUS,        // +
+    OP_MINUS,       // -
+    OP_TIMES,       // /
+    OP_OVER,        // *
+    OP_MOD,         // %
     
-    OP_LT,           // <
-    OP_GT,           // >
-    OP_LE,           // <=
-    OP_GE,           // >=
-    OP_EQ,           // ==
-    OP_NE,           // !=
+    OP_LT,          // <
+    OP_GT,          // >
+    OP_LE,          // <=
+    OP_GE,          // >=
+    OP_EQ,          // ==
+    OP_NE,          // !=
 
-    OP_AND,          // &&
-    OP_OR,           // ||
-    OP_NOT,          // !
+    OP_AND,         // &&
+    OP_OR,          // ||
+    OP_NOT,         // !
 
-    OP_BW_XOR,       // ^
-    OP_BW_AND,       // &
-    OP_BW_OR,        // |
-    OP_BW_LSR,       // >>
-    OP_BW_LSL,       // <<
-    OP_BW_NOT,       // ~
+    OP_BW_XOR,      // ^
+    OP_BW_AND,      // &
+    OP_BW_OR,       // |
+    OP_BW_LSR,      // >>
+    OP_BW_LSL,      // <<
+    OP_BW_NOT,      // ~
 
-    OP_ASSIGN,       // =
-    OP_MUL_ASSIGN,   // *=
-    OP_DIV_ASSIGN,   // /=
-    OP_MOD_ASSIGN,   // %=
-    OP_ADD_ASSIGN,   // +=
-    OP_SUB_ASSIGN,   // -=
-    OP_LSL_ASSIGN,   // <<=
-    OP_LSR_ASSIGN,   // >>=
-    OP_AND_ASSIGN,   // &=
-    OP_XOR_ASSIGN,   // ^=
-    OP_OR_ASSIGN     // |=
+    OP_ADDRESS,     // &
+    OP_DEREFERENCE, // *
+
+    OP_ASSIGN,      // =
+    OP_MUL_ASSIGN,  // *=
+    OP_DIV_ASSIGN,  // /=
+    OP_MOD_ASSIGN,  // %=
+    OP_ADD_ASSIGN,  // +=
+    OP_SUB_ASSIGN,  // -=
+    OP_LSL_ASSIGN,  // <<=
+    OP_LSR_ASSIGN,  // >>=
+    OP_AND_ASSIGN,  // &=
+    OP_XOR_ASSIGN,  // ^=
+    OP_OR_ASSIGN    // |=
 
 } Op;
 

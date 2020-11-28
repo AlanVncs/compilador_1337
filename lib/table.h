@@ -19,6 +19,7 @@ Scope* new_child_scope(Scope* parent);
 int add_scope(Scope* parent, Scope* child);
 int add_scope_ast(Scope* scope, AST* ast);
 void replace_scope_ast(Scope* scope, AST* new_ast, AST* old_ast);
+void delete_scope(Scope* scope);
 
 
 // Output
