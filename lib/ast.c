@@ -17,13 +17,8 @@ struct ast {
     int line;
     struct ast** children;
     int children_length;
+    struct ast* parent;
 };
-
-typedef struct {
-    Type type;
-    NodeKind lnk;
-    NodeKind rnk;
-} Unif;
 
 
 // Create | Delete
@@ -43,6 +38,7 @@ AST* new_ast(Type type, char* name, int line, NodeKind kind, ...) {
     ast->kind = kind;
     ast->children = NULL;
     ast->children_length = 0;
+    ast->parent = NULL;
 
     // Set data filed
     va_list ap;
@@ -94,13 +90,17 @@ void delete_ast(AST *ast) {
 
 // Modify
 AST* add_ast_child(AST* parent, AST* child){
+
+    // TODO Remover: Esta verificação é inútil quando o compilador está funcionando corretamente
+    if(!child){printf("add_ast_child: 'child' não deveria chegar nulo\n"); exit(EXIT_FAILURE);}
+
     if (parent->children_length%AST_CHILDREN_BLOCK_SIZE == 0) {
         int new_size = AST_CHILDREN_BLOCK_SIZE + parent->children_length;
         parent->children = realloc(parent->children, new_size*sizeof(AST*));
         if(!parent->children){printf("add_ast_child: Could not allocate memory\n"); exit(EXIT_FAILURE);}
     }
-    parent->children[parent->children_length] = child;
-    parent->children_length++;
+    parent->children[parent->children_length++] = child;
+    child->parent = parent;
     return parent;
 }
 
@@ -108,8 +108,7 @@ AST* add_ast_child(AST* parent, AST* child){
 // Test
 int has_float_data(AST* ast){
     switch (ast->kind) {
-        case FLOAT_VAL_NODE:
-        case DOUBLE_VAL_NODE: return 1;
+        case FLOAT_VAL_NODE: return 1;
         default: return 0;
     }  
 }
@@ -119,7 +118,6 @@ int has_data(AST* ast){
         case CHAR_VAL_NODE:
         case INT_VAL_NODE:
         case FLOAT_VAL_NODE:
-        case DOUBLE_VAL_NODE:
         case STR_VAL_NODE:
         case VAR_DECL_NODE:
         case VAR_USE_NODE:
@@ -127,6 +125,35 @@ int has_data(AST* ast){
         default:
             return 0;
     }
+}
+
+int compare_func_decl(AST* func_decl_a, AST* func_decl_b){
+
+    // Compare type
+    if(func_decl_a->type != func_decl_b->type) return 1;
+
+    // Compare name
+    if(strcmp(get_ast_name(func_decl_a), get_ast_name(func_decl_b))) return 1;
+
+    // Compare param_list
+    return compare_param_list(func_decl_a->children[1], func_decl_b->children[1]);
+}
+
+int compare_param_list(AST* param_list_a, AST* param_list_b){
+
+    int length_a = param_list_a->children_length;
+    int length_b = param_list_b->children_length;
+
+    if(length_a != length_b) return 1;
+
+    // Compare types
+    for(int i=0; i<length_a; i++){
+        AST* param_a = param_list_a->children[i];
+        AST* param_b = param_list_b->children[i];
+        if(param_a->type != param_b->type) return 1;
+    }
+    
+    return 0;
 }
 
 
@@ -144,28 +171,33 @@ void gen_ast_node_dot(AST* node, FILE* ast_file){
 
     fprintf(ast_file, "node%d[label=\"", node->id);
     
-    // Has a type
-    if (node->type != NO_TYPE) {
-        fprintf(ast_file, "(%s) ", get_type_str(node->type));
+    if (node->kind == VAR_DECL_NODE) {
+        char* node_name = get_ast_name(node);
+        if(node_name)
+            fprintf(ast_file, "%s %s", get_type_str(get_ast_type(node)), node_name);
+        else
+            fprintf(ast_file, "%s", get_type_str(get_ast_type(node)));
     }
-
-
-    if (node->kind == VAR_DECL_NODE || node->kind == VAR_USE_NODE) {
-        fprintf(ast_file, "%s@%d", get_ast_name(node), node->int_data);
+    else if(node->kind == VAR_USE_NODE){
+        fprintf(ast_file, "%s (%s)", get_ast_name(node), get_type_str(get_ast_type(node)));
     }
     else if(node->kind == STR_VAL_NODE){
-        fprintf(ast_file, "str@%d", node->int_data);
+        fprintf(ast_file, "@%d (string)", node->int_data);
     }
     else if(node->kind == CHAR_VAL_NODE){
-        fprintf(ast_file, " %c", node->int_data);
+        fprintf(ast_file, "'%c' (char)", node->int_data);
     }
     else if (node->kind == INT_VAL_NODE) {
-        fprintf(ast_file, " %d", node->int_data);
+        fprintf(ast_file, "%d (int)", node->int_data);
     } 
-    else if(node->kind == FLOAT_VAL_NODE || node->kind == DOUBLE_VAL_NODE){
-        fprintf(ast_file, "%.2f", node->float_data);
+    else if(node->kind == FLOAT_VAL_NODE){
+        fprintf(ast_file, "%.2f (float)", node->float_data);
     }
     else {
+        // Has a type
+        if (node->type != NO_TYPE) {
+            fprintf(ast_file, "(%s) ", get_type_str(node->type));
+        }
         fprintf(ast_file, "%s", get_kind_str(node->kind));
     }
 
@@ -181,16 +213,16 @@ void gen_ast_node_dot(AST* node, FILE* ast_file){
 }
 
 void print_ast(AST* ast){
-    if(!ast){printf("NULL AST\n\n\n"); return;}
+    if(!ast){printf("NULL AST\n\n"); return;}
 
     printf("-------------------\n");
     printf("        AST\n");
-    printf("ID: %d\n", ast->id);
-    printf("Kind: %s\n", get_kind_str(ast->kind));
-    printf("Type: %s\n", get_type_str(ast->type));
-    printf("Name: %s\n", ast->name);
-    printf("Line: %d\n", ast->line);
-    printf("Children length: %d\n", ast->children_length);
+    printf("ID: %d\n", get_ast_id(ast));
+    printf("Kind: %s\n", get_kind_str(get_ast_kind(ast)));
+    printf("Type: %s\n", get_type_str(get_ast_type(ast)));
+    printf("Name: %s\n", get_ast_name(ast));
+    printf("Line: %d\n", get_ast_line(ast));
+    printf("Children length: %d\n", get_ast_length(ast));
     printf("Data: ");
     if (ast->kind == VAR_DECL_NODE || ast->kind == VAR_USE_NODE) {
         printf("%s@%d\n", get_ast_name(ast), ast->int_data);
@@ -198,11 +230,14 @@ void print_ast(AST* ast){
     else if(ast->kind == STR_VAL_NODE){
         printf("str@%d\n", ast->int_data);
     }
-    else if (ast->kind == CHAR_VAL_NODE || ast->kind == INT_VAL_NODE) {
-        printf("%s:%d\n", get_ast_name(ast), ast->int_data);
+    else if(ast->kind == CHAR_VAL_NODE){
+        printf("'%c' (char)\n", ast->int_data);
+    }
+    else if (ast->kind == INT_VAL_NODE) {
+        printf("%d (int)\n", ast->int_data);
     } 
-    else if(ast->kind == FLOAT_VAL_NODE || ast->kind == DOUBLE_VAL_NODE){
-        printf("%s:%f\n", get_ast_name(ast), ast->float_data);
+    else if(ast->kind == FLOAT_VAL_NODE){
+        printf("%f (float)\n", ast->float_data);
     }
     else {
         printf("NO DATA\n");
@@ -212,6 +247,40 @@ void print_ast(AST* ast){
 
 
 // Get
+int get_ast_id(AST* ast){
+    return ast->id;
+}
+
+NodeKind get_ast_kind(AST* ast){
+    if(!ast) return NONE;
+    return ast->kind;
+}
+
+Type get_ast_type(AST* ast){
+    if(!ast) return ERR_TYPE;
+    return ast->type;
+}
+
+char* get_ast_name(AST* ast){
+    if(ast->kind == FUNCTION_DEF_NODE || ast->kind == FUNCTION_DECL_NODE || ast->kind == FUNCTION_CALL_NODE){
+        return get_ast_name(ast->children[0]);
+    }
+    return ast->name;
+}
+
+int get_ast_line(AST* ast){
+    return ast->line;
+}
+
+AST* get_ast_child(AST* ast, int i){
+    if(i >= ast->children_length) return NULL;
+    return ast->children[i];
+}
+
+int get_ast_length(AST* ast){
+    return ast->children_length;
+}
+
 char* get_kind_str(NodeKind kind){
     // TODO
     switch(kind) {
@@ -239,10 +308,11 @@ char* get_kind_str(NodeKind kind){
         case VAR_DECL_NODE:         return "var_decl";
         case VAR_USE_NODE:          return "var_use";
 
+        case EXPRESSION_NODE:  return "expression";
+
         case CHAR_VAL_NODE:         return "char_val";
         case INT_VAL_NODE:          return "int_val";
         case FLOAT_VAL_NODE:        return "float_val";
-        case DOUBLE_VAL_NODE:       return "double_val";
         case STR_VAL_NODE:          return "str_val";
 
         case FUNCTION_CALL_NODE:    return "function_call";
@@ -271,7 +341,7 @@ char* get_kind_str(NodeKind kind){
         case BW_OR_NODE:            return "|";
         case AND_NODE:              return "&&";
         case OR_NODE:               return "||";
-        case TERN_OP_NOPE:          return "?:";
+        case TERN_OP_NODE:          return "?:";
         case ASSIGN_NODE:           return "=";
 
         case ADDRESS_NODE:          return "&";
@@ -281,21 +351,21 @@ char* get_kind_str(NodeKind kind){
         case BW_NOT_NODE:           return "~";
         case NOT_NODE:              return "!";
 
-        // case C2I_NODE:              return "c2i";
-        // case C2F_NODE:              return "c2f";
-        // case C2D_NODE:              return "c2d";
-        // case I2C_NODE:              return "i2c";
-        // case I2F_NODE:              return "i2f";
-        // case I2D_NODE:              return "i2d";
-        // case F2C_NODE:              return "f2c";
-        // case F2I_NODE:              return "f2i";
-        // case F2D_NODE:              return "f2d";
-        // case D2C_NODE:              return "d2c";
-        // case D2I_NODE:              return "d2i";
-        // case D2F_NODE:              return "d2f";
+        case C2I_NODE:              return "c2i";
+        case C2F_NODE:              return "c2f";
+        case C2D_NODE:              return "c2d";
+        case I2C_NODE:              return "i2c";
+        case I2F_NODE:              return "i2f";
+        case I2D_NODE:              return "i2d";
+        case F2C_NODE:              return "f2c";
+        case F2I_NODE:              return "f2i";
+        case F2D_NODE:              return "f2d";
+        case D2C_NODE:              return "d2c";
+        case D2I_NODE:              return "d2i";
+        case D2F_NODE:              return "d2f";
         
         default:
-            printf("get_str_kind: NodeKind <%d> does not exists!\n\n", kind);
+            printf("get_kind_str: NodeKind <%d> does not exists!\n\n", kind);
             exit(EXIT_FAILURE);
     }
 }
@@ -344,24 +414,156 @@ char* get_op_str(Op op){
     }
 }
 
-char* get_ast_name(AST* ast){
-    return ast->name;
+char* get_var_kind(AST* ast){
+    switch (ast->kind){
+        case FUNCTION_DEF_NODE:  return "func_def";
+        case FUNCTION_DECL_NODE: return "func_decl";
+        case VAR_DECL_NODE:      return "variable";
+        
+        default: return "not_var";
+    }
 }
 
-Type get_ast_type(AST* ast){
-    return ast->type;
+NodeKind get_conv_node(Type old_type, Type new_type){
+
+    static NodeKind table[4][4] = {
+    //       char       int     float    double
+        {    NONE, C2I_NODE, C2F_NODE, C2D_NODE},
+        {I2C_NODE,     NONE, I2F_NODE, I2D_NODE},
+        {F2C_NODE, F2I_NODE,     NONE, F2D_NODE},
+        {D2C_NODE, D2I_NODE, D2F_NODE,     NONE}
+    };
+
+    return table[old_type][new_type];
 }
 
-int get_ast_line(AST* ast){
-    return ast->line;
+Type get_function_def_type(AST* return_stmt){
+    AST* parent;
+    for(parent = return_stmt->parent; parent->kind != FUNCTION_DEF_NODE; parent = parent->parent);
+
+    return parent->type;
 }
 
-AST* get_ast_child(AST* ast, int i){
-    return ast->children[i];
+Op get_ast_op(AST* operation){
+
+    if(!operation) printf("get_ast_op: operation null\n");
+
+    switch (operation->kind){
+        case PLUS_NODE:   return OP_PLUS;   // +
+        case MINUS_NODE:  return OP_MINUS;  // -
+        case OVER_NODE:   return OP_OVER;   // *
+        case TIMES_NODE:  return OP_TIMES;  // /
+
+        case LT_NODE:     return OP_LT;     // <
+        case GT_NODE:     return OP_GT;     // >
+        case AND_NODE:    return OP_AND;    // &&
+        case OR_NODE:     return OP_OR;     // ||
+        case LE_NODE:     return OP_LE;     // <=
+        case GE_NODE:     return OP_GE;     // >=
+        case EQ_NODE:     return OP_EQ;     // ==
+        case NE_NODE:     return OP_NE;     // !=
+
+        case BW_XOR_NODE: return OP_BW_XOR; // ^
+        case BW_AND_NODE: return OP_BW_AND; // &
+        case BW_OR_NODE:  return OP_BW_OR;  // |
+        case BW_LSR_NODE: return OP_BW_LSR; // >>
+        case BW_LSL_NODE: return OP_BW_LSL; // <<
+        case MOD_NODE:    return OP_MOD;    // %
+
+        case ASSIGN_NODE: return OP_ASSIGN; // =
+        
+        default: printf("get_ast_op: Error"); exit(EXIT_FAILURE); break;
+    }
 }
 
-int get_ast_length(AST* ast){
-    return ast->children_length;
+Unif get_ast_unif(AST* operation){
+    
+    //  + - * /
+    static const Unif tableA[4][4] = {
+        //          char   int    float    double
+        //   char   char   int    float    double
+        //    int   int    int    float    double
+        //  float   float  float  float    double
+        // double   double double double   double
+        {{CHAR_TYPE, CHAR_TYPE},     {INT_TYPE, INT_TYPE},       {FLOAT_TYPE, FLOAT_TYPE},   {DOUBLE_TYPE, DOUBLE_TYPE}},
+        {{INT_TYPE, INT_TYPE},       {INT_TYPE, INT_TYPE},       {FLOAT_TYPE, FLOAT_TYPE},   {DOUBLE_TYPE, DOUBLE_TYPE}},
+        {{FLOAT_TYPE, FLOAT_TYPE},   {FLOAT_TYPE, FLOAT_TYPE},   {FLOAT_TYPE, FLOAT_TYPE},   {DOUBLE_TYPE, DOUBLE_TYPE}},
+        {{DOUBLE_TYPE, DOUBLE_TYPE}, {DOUBLE_TYPE, DOUBLE_TYPE}, {DOUBLE_TYPE, DOUBLE_TYPE}, {DOUBLE_TYPE, DOUBLE_TYPE}}
+    };
+
+    // < > && || <= >= == !=
+    static const Unif tableB[4][4] = {
+        //          char   int     float    double
+        //   char   int    int     int      int
+        //    int   int    int     int      int
+        //  float   int    int     int      int
+        // double   int    int     int      int
+        {{INT_TYPE, CHAR_TYPE},   {INT_TYPE, INT_TYPE},    {INT_TYPE, FLOAT_TYPE},  {INT_TYPE, DOUBLE_TYPE}},
+        {{INT_TYPE, INT_TYPE},    {INT_TYPE, INT_TYPE},    {INT_TYPE, FLOAT_TYPE},  {INT_TYPE, DOUBLE_TYPE}},
+        {{INT_TYPE, FLOAT_TYPE},  {INT_TYPE, FLOAT_TYPE},  {INT_TYPE, FLOAT_TYPE},  {INT_TYPE, DOUBLE_TYPE}},
+        {{INT_TYPE, DOUBLE_TYPE}, {INT_TYPE, DOUBLE_TYPE}, {INT_TYPE, DOUBLE_TYPE}, {INT_TYPE, DOUBLE_TYPE}}
+    };
+
+    // ^ & | >> << %
+    static const Unif tableC[4][4] = {
+        //          char    int    float    double
+        //   char   int     int    err      err
+        //    int   int     int    err      err
+        //  float   err     err    err      err
+        // double   err     err    err      err
+        {{INT_TYPE, INT_TYPE}, {INT_TYPE, INT_TYPE}, {ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}},
+        {{INT_TYPE, INT_TYPE}, {INT_TYPE, INT_TYPE}, {ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}},
+        {{ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}},
+        {{ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}, {ERR_TYPE, ERR_TYPE}}
+    };
+
+    // =
+    static const Unif tableD[4][4] = {
+        //          char    int    float    double
+        //   char   char    char   char     char
+        //    int   int     int    int      int
+        //  float   float   float  float    float
+        // double   double  double double   double
+        {{CHAR_TYPE, CHAR_TYPE},     {CHAR_TYPE, CHAR_TYPE},     {CHAR_TYPE, CHAR_TYPE},     {CHAR_TYPE, CHAR_TYPE}},
+        {{INT_TYPE, INT_TYPE},       {INT_TYPE, INT_TYPE},       {INT_TYPE, INT_TYPE},       {INT_TYPE, INT_TYPE}},
+        {{FLOAT_TYPE, FLOAT_TYPE},   {FLOAT_TYPE, FLOAT_TYPE},   {FLOAT_TYPE, FLOAT_TYPE},   {FLOAT_TYPE, FLOAT_TYPE}},
+        {{DOUBLE_TYPE, DOUBLE_TYPE}, {DOUBLE_TYPE, DOUBLE_TYPE}, {DOUBLE_TYPE, DOUBLE_TYPE}, {DOUBLE_TYPE, DOUBLE_TYPE}}
+    };
+
+    AST* l_ast = operation->children[0];
+    Type l_type = l_ast->type;
+
+    AST* r_ast = operation->children[1];
+    Type r_type = r_ast->type;
+    
+    switch(operation->kind){
+        case PLUS_NODE: 
+        case MINUS_NODE:
+        case OVER_NODE:
+        case TIMES_NODE:   return tableA[l_type][r_type];
+
+        case LT_NODE:
+        case GT_NODE:
+        case AND_NODE:
+        case OR_NODE:
+        case LE_NODE:
+        case GE_NODE:
+        case EQ_NODE:
+        case NE_NODE:     return tableB[l_type][r_type];
+
+        case BW_XOR_NODE:
+        case BW_AND_NODE:
+        case BW_OR_NODE:
+        case BW_LSR_NODE:
+        case BW_LSL_NODE:
+        case MOD_NODE:    return tableC[l_type][r_type];
+
+        case ASSIGN_NODE: return tableD[l_type][r_type];
+
+        default:
+            printf("get_ast_unif: Error");
+            exit(EXIT_FAILURE);
+    }
 }
 
 
@@ -371,7 +573,17 @@ AST* set_ast_kind(AST* ast, NodeKind kind){
     return ast;
 }
 
+AST* set_ast_child(AST* parent, int i, AST* child){
+    if(i >= get_ast_length(parent)) return parent;
+    parent->children[i] = child;
+    child->parent = parent;
+    return parent;
+}
 
+AST* set_ast_type(AST* ast, Type type){
+    ast->type = type;
+    return ast;
+}
 
 
 

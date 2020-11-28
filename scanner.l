@@ -24,7 +24,6 @@ WS  [ \t\v\n\f]
 
 #include <stdio.h>
 #include "parser.h"
-// #include "lib/table.h"
 #include "lib/ast.h"
 
 extern int sym_type(char* id);
@@ -106,10 +105,11 @@ int pp_if_level = 0;
 
 {L}{A}*                           { strcpy(last_id, yytext); return sym_type(yytext); }
 
+{CP}?"'"([^'\\\n]|{ES})+"'"       { return C_CONSTANT;  }
+
 {HP}{H}+{IS}?                     { return I_CONSTANT; }
 {NZ}{D}*{IS}?                     { return I_CONSTANT; }
 "0"{O}*{IS}?                      { return I_CONSTANT; }
-{CP}?"'"([^'\\\n]|{ES})+"'"       { return I_CONSTANT; }
 
 {D}+{E}{FS}?                      { return F_CONSTANT; }
 {D}*"."{D}+{E}?{FS}?              { return F_CONSTANT; }

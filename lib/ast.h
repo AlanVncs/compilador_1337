@@ -33,10 +33,11 @@ typedef enum {
     VAR_DECL_NODE,
     VAR_USE_NODE,
 
+    EXPRESSION_NODE,
+
     CHAR_VAL_NODE,
     INT_VAL_NODE,
     FLOAT_VAL_NODE,
-    DOUBLE_VAL_NODE,
     STR_VAL_NODE,
 
     FUNCTION_CALL_NODE,
@@ -65,7 +66,7 @@ typedef enum {
     NE_NODE,          // !=
     AND_NODE,         // &&
     OR_NODE,          // ||
-    TERN_OP_NOPE,     // ?:
+    TERN_OP_NODE,     // ?:
     ASSIGN_NODE,      // = += -= *= /= %= ^= |= &= >>= <<=
 
     ADDRESS_NODE,     // &
@@ -75,18 +76,18 @@ typedef enum {
     BW_NOT_NODE,      // ~
     NOT_NODE,         // !
 
-    // C2I_NODE,
-    // C2F_NODE,
-    // C2D_NODE,
-    // I2C_NODE,
-    // I2F_NODE,
-    // I2D_NODE,
-    // F2C_NODE,
-    // F2I_NODE,
-    // F2D_NODE,
-    // D2C_NODE,
-    // D2I_NODE,
-    // D2F_NODE,
+    C2I_NODE,
+    C2F_NODE,
+    C2D_NODE,
+    I2C_NODE,
+    I2F_NODE,
+    I2D_NODE,
+    F2C_NODE,
+    F2I_NODE,
+    F2D_NODE,
+    D2C_NODE,
+    D2I_NODE,
+    D2F_NODE,
 
     NONE
 
@@ -132,8 +133,12 @@ typedef enum {
 
 } Op;
 
-
 typedef struct ast AST;
+
+typedef struct {
+    Type operation_type;
+    Type conv_type;
+} Unif;
 
 // Create | Delete
 AST* new_ast(Type type, char* name, int line, NodeKind kind, ...);
@@ -147,6 +152,8 @@ AST* add_ast_child(AST *parent, AST *child);
 // Test
 int has_float_data(AST* ast);
 int has_data(AST* ast);
+int compare_func_decl(AST* func_decl_a, AST* func_decl_b);
+int compare_param_list(AST* param_list_a, AST* param_list_b);
 
 // Output
 void gen_ast_dot(AST *ast);
@@ -154,16 +161,26 @@ void gen_ast_node_dot(AST *node, FILE* ast_file);
 void print_ast(AST *ast);
 
 // Get
-char* get_kind_str(NodeKind kind);
-char* get_op_str(Op op);
-char* get_ast_name(AST* ast);
+int get_ast_id(AST* ast);
+NodeKind get_ast_kind(AST* ast);
 Type get_ast_type(AST* ast);
+char* get_ast_name(AST* ast);
 int get_ast_line(AST* ast);
 AST* get_ast_child(AST* ast, int i);
 int get_ast_length(AST* ast);
+char* get_kind_str(NodeKind kind);
+char* get_op_str(Op op);
+char* get_var_kind(AST* ast);
+NodeKind get_conv_node(Type old_type, Type new_type);
+Type get_function_def_type(AST* return_stmt);
+Op get_ast_op(AST* operation);
+Unif get_ast_unif(AST* operation);
+
 
 // Set
 AST* set_ast_kind(AST* ast, NodeKind kind);
+AST* set_ast_child(AST* parent, int i, AST* child);
+AST* set_ast_type(AST* ast, Type type);
 
 
 #endif

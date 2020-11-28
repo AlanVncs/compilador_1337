@@ -1,0 +1,3 @@
+- Como só usaremos os tipos primitivos da linguagem, não será necessário realizar verificação de tipos, mas sim apenas criar nós de conversão
+
+- O novo formato simplificou o trabalho, porém aumentou muito o tamanho

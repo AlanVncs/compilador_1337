@@ -3,16 +3,12 @@
 #include <string.h>
 
 #include "table.h"
-#include "ast.h"
 
 struct scope {
     int id;
 
-    AST** var_decls;
-    int var_decls_length;
-
-    AST** func_decls;
-    int func_decls_length;
+    AST** table;
+    int table_length;
 
     struct scope* parent;
 
@@ -27,17 +23,20 @@ Scope* new_scope() {
 
     scope->id = next_scope_id++;
     
-    scope->var_decls = NULL;
-    scope->var_decls_length = 0;
-
-    scope->func_decls = NULL;
-    scope->func_decls_length = 0;
+    scope->table = NULL;
+    scope->table_length = 0;
 
     scope->parent = NULL;
 
     scope->children = NULL;
     scope->children_length = 0;
     return scope;
+}
+
+Scope* new_child_scope(Scope* parent){
+    Scope* child = new_scope();
+    add_scope(parent, child);
+    return child;
 }
 
 
@@ -53,24 +52,29 @@ int add_scope(Scope* parent, Scope* child) {
     return parent->children_length++;
 }
 
-int add_scope_var(Scope* scope, AST* var_ast) {
+int add_scope_ast(Scope* scope, AST* ast) {
     // Aloca mais espaço se necessário
-    if (scope->var_decls_length % SCOPE_DECL_BLOCK_SIZE == 0) {
-        scope->var_decls = realloc(scope->var_decls, (SCOPE_DECL_BLOCK_SIZE + scope->var_decls_length) * sizeof(AST*));
-        if (scope->var_decls == NULL) { printf("add_scope_var: Could not allocate memory\n"); exit(EXIT_FAILURE); }
+    if (scope->table_length % SCOPE_DECL_BLOCK_SIZE == 0) {
+        scope->table = realloc(scope->table, (SCOPE_DECL_BLOCK_SIZE + scope->table_length) * sizeof(AST*));
+        if (scope->table == NULL) { printf("add_scope_var: Could not allocate memory\n"); exit(EXIT_FAILURE); }
     }
-    scope->var_decls[scope->var_decls_length] = var_ast;
-    return scope->var_decls_length++;
+    scope->table[scope->table_length] = ast;
+    return scope->table_length++;
 }
 
-int add_scope_func(Scope* scope, AST* func_ast) {
-    // Aloca mais espaço se necessário
-    if (scope->func_decls_length % SCOPE_DECL_BLOCK_SIZE == 0) {
-        scope->func_decls = realloc(scope->func_decls, (SCOPE_DECL_BLOCK_SIZE + scope->func_decls_length) * sizeof(AST*));
-        if (scope->func_decls == NULL) { printf("add_scope_func: Could not allocate memory\n"); exit(EXIT_FAILURE); }
+void replace_scope_ast(Scope* scope, AST* new_ast, AST* old_ast){
+    int length = scope->table_length;
+    for(int i=0; i<length; i++){
+        int id = get_ast_id(old_ast);
+        if(id == get_ast_id(scope->table[i])){
+            scope->table[i] = new_ast;
+            return;
+        }
     }
-    scope->func_decls[scope->func_decls_length] = func_ast;
-    return scope->func_decls_length++;
+    
+    // TODO Remover: Este erro não deve ocorrer nunca
+    printf("replace_scope_ast: old_ast not found\n");
+    exit(EXIT_FAILURE);
 }
 
 
@@ -89,7 +93,7 @@ void gen_scope_node_dot(Scope* scope, FILE* scope_file){
     fprintf(scope_file, "\t\t<<table border=\"0\">\n");
     fprintf(scope_file, "\t\t\t<tr><td colspan=\"4\"><b>Scope ID: %d</b></td></tr>\n", scope->id);
     fprintf(scope_file, "\t\t\t<tr><td></td></tr>\n");
-    if(scope->var_decls_length || scope->func_decls_length) gen_decl_dot(scope, scope_file);
+    if(scope->table_length || scope->table_length) gen_decl_dot(scope, scope_file);
     fprintf(scope_file, "\t\t</table>>\n");
     fprintf(scope_file, "\t];\n");
     // Filhos
@@ -108,31 +112,47 @@ void gen_decl_dot(Scope* scope, FILE* scope_file){
     fprintf(scope_file, "\t\t\t\t<td><i>Line</i></td>\n");
     fprintf(scope_file, "\t\t\t</tr>\n");
 
-    // variables
-    for(int i=0; i<scope->var_decls_length; i++){
-        AST* ast = scope->var_decls[i];
+    for(int i=0; i<scope->table_length; i++){
+        AST* ast = scope->table[i];
         fprintf(scope_file, "\t\t\t<tr>\n");
         fprintf(scope_file, "\t\t\t\t<td>%s</td>\n", get_ast_name(ast));
         fprintf(scope_file, "\t\t\t\t<td>%s</td>\n", get_type_str(get_ast_type(ast)));
-        fprintf(scope_file, "\t\t\t\t<td>variable</td>\n");
-        fprintf(scope_file, "\t\t\t\t<td>%d</td>\n", get_ast_line(ast));
-        fprintf(scope_file, "\t\t\t</tr>\n");
-    }
-
-    // functions
-    for(int i=0; i<scope->func_decls_length; i++){
-        AST* ast = scope->func_decls[i];
-        fprintf(scope_file, "\t\t\t<tr>\n");
-        fprintf(scope_file, "\t\t\t\t<td>%s</td>\n", get_ast_name(ast));
-        fprintf(scope_file, "\t\t\t\t<td>%s</td>\n", get_type_str(get_ast_type(ast)));
-        fprintf(scope_file, "\t\t\t\t<td>function</td>\n");
+        fprintf(scope_file, "\t\t\t\t<td>%s</td>\n", get_var_kind(ast));
         fprintf(scope_file, "\t\t\t\t<td>%d</td>\n", get_ast_line(ast));
         fprintf(scope_file, "\t\t\t</tr>\n");
     }
 }
 
+void print_scope(Scope* scope){
+    printf("Start scope: %d -------------\n", scope->id);
+    for(int i=0; i<scope->table_length; i++){
+        print_ast(scope->table[i]);
+    }
+    printf("--------------- End scope: %d\n\n", scope->id);
+}
+
+
 
 // Get
+AST* lookup_scope_ast(Scope* scope, AST* ast){
+    if(!scope) return NULL;
+    for(int i=0; i<scope->table_length; i++){
+        AST* found_ast = scope->table[i];
+        if(strcmp(get_ast_name(ast), get_ast_name(found_ast)) == 0) {
+            return found_ast;
+        }
+    }
+    return NULL;
+}
+
+AST* lookup_outter_scope_ast(Scope* scope, AST* ast){
+    
+    if(!scope) return NULL;
+
+    AST* found_ast = lookup_scope_ast(scope, ast);
+    if(!found_ast) return lookup_outter_scope_ast(scope->parent, ast);
+    return found_ast;
+}
 
 // typedef enum {
 //     VAR_ID,
