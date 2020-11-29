@@ -1,0 +1,46 @@
+digraph {
+	graph [ordering="out"];
+	0[shape=record label=
+		<<table border="0">
+			<tr><td colspan="4"><b>Scope ID: 0</b></td></tr>
+			<tr><td></td></tr>
+			<tr>
+				<td><i>Name</i></td>
+				<td><i>Type</i></td>
+				<td><i>Kind</i></td>
+				<td><i>Line</i></td>
+			</tr>
+			<tr>
+				<td>printint</td>
+				<td>int</td>
+				<td>func_decl</td>
+				<td>3</td>
+			</tr>
+			<tr>
+				<td>main</td>
+				<td>int</td>
+				<td>func_def</td>
+				<td>5</td>
+			</tr>
+		</table>>
+	];
+	1[shape=record label=
+		<<table border="0">
+			<tr><td colspan="4"><b>Scope ID: 1</b></td></tr>
+			<tr><td></td></tr>
+			<tr>
+				<td><i>Name</i></td>
+				<td><i>Type</i></td>
+				<td><i>Kind</i></td>
+				<td><i>Line</i></td>
+			</tr>
+			<tr>
+				<td>x</td>
+				<td>int</td>
+				<td>variable</td>
+				<td>6</td>
+			</tr>
+		</table>>
+	];
+	0 -> 1
+}

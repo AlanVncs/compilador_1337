@@ -272,6 +272,14 @@ int get_ast_line(AST* ast){
     return ast->line;
 }
 
+int get_ast_data(AST *ast){
+    return ast->int_data;
+}
+
+float get_ast_data_float(AST *ast){
+    return ast->float_data;
+}
+
 AST* get_ast_child(AST* ast, int i){
     if(i >= ast->children_length) return NULL;
     return ast->children[i];

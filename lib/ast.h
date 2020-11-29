@@ -169,6 +169,8 @@ NodeKind get_ast_kind(AST* ast);
 Type get_ast_type(AST* ast);
 char* get_ast_name(AST* ast);
 int get_ast_line(AST* ast);
+int get_ast_data(AST *ast);
+float get_ast_data_float(AST *ast);
 AST* get_ast_child(AST* ast, int i);
 int get_ast_length(AST* ast);
 char* get_kind_str(NodeKind kind);

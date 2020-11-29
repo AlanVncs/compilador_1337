@@ -1,6 +1,6 @@
-ast.dot
+# ast.dot
 ast.pdf
-table.dot
+# table.dot
 table.pdf
 compiler.bin
 parser.c

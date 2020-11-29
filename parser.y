@@ -11,6 +11,7 @@
 #include "lib/ast.h"
 #include "lib/type.h"
 #include "lib/table.h"
+#include "lib/cg.h"
 
 extern int yylex(void);
 extern void yyerror(char const* str);
@@ -27,6 +28,7 @@ char last_id[VARIABLE_MAX_SIZE];
 
 AST* root_ast = NULL;
 AST* last_param_list = NULL;
+FILE *outFile;
 
 Type last_decl_type;
 Op last_assign_op;
@@ -629,6 +631,15 @@ int main(void) {
     Scope* scope = build_scope_tree();
     gen_scope_dot(scope);
     gen_ast_dot(root_ast);
+
+    outFile=fopen("out.s", "w+");
+    /* genpreamble();
+    gensyscalltest(); //Teste para syscall `write`
+    genpostamble(); */
+    freeall_registers();
+    rec_gen(root_ast);
+    fclose(outFile); 
+
     delete_scope(scope);
     delete_ast(root_ast);
     yylex_destroy();
