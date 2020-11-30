@@ -40,12 +40,6 @@ digraph {
 				<td>variable</td>
 				<td>9</td>
 			</tr>
-			<tr>
-				<td>x</td>
-				<td>int</td>
-				<td>variable</td>
-				<td>10</td>
-			</tr>
 		</table>>
 	];
 	0 -> 1

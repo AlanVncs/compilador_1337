@@ -263,7 +263,7 @@ int gen_assign(AST *ast){
     return r0;
 }
 //----------------------------------------
-// Code gen that handle expr
+// Code gen that handle bool expr
 int gen_Band(AST *ast){
     int r0=rec_gen(get_ast_child(ast, 0));
     int r1=rec_gen(get_ast_child(ast, 1));
@@ -287,6 +287,80 @@ int gen_Band(AST *ast){
 
     return r0;
 }
+
+void gen_cmp_branches(char *op, char *label1, char *label2, int r0, int r1){
+    fprintf(outFile, "\tcmp \t %s, %s\n", reglist[r1], reglist[r0]);
+    fprintf(outFile, "\t%s  \t%s\n", op, label1);
+    fprintf(outFile, "\tmov \t$0, %s\n", reglist[r0]);
+    fprintf(outFile, "\tjmp \t%s\n", label2);
+    fprintf(outFile, "%s:\n", label1);
+    fprintf(outFile, "\tmov \t$1, %s\n", reglist[r0]);
+    fprintf(outFile, "%s:\n", label2);
+}
+
+int gen_lt(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    char label1[10], label2[10];
+
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+
+    gen_cmp_branches("jb", label1, label2, r0, r1);
+    
+    free_register(r1);
+
+    return r0;
+}
+
+int gen_gt(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    char label1[10], label2[10];
+
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+
+
+    gen_cmp_branches("ja", label1, label2, r0, r1);
+    
+    free_register(r1);
+
+    return r0;
+}
+
+int gen_le(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    char label1[10], label2[10];
+
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+
+
+    gen_cmp_branches("jbe", label1, label2, r0, r1);
+    
+    free_register(r1);
+
+    return r0;
+}
+
+int gen_ge(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    char label1[10], label2[10];
+
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+
+
+    gen_cmp_branches("jae", label1, label2, r0, r1);
+    
+    free_register(r1);
+
+    return r0;
+}
+
 //----------------------------------------
 // Code gen that handle functions
 int gen_ret(AST *ast){
@@ -404,6 +478,10 @@ int rec_gen(AST *ast){
         case OVER_NODE:             return gen_div(ast);
         case MOD_NODE:              return gen_mod(ast);
         case AND_NODE:              return gen_Band(ast);
+        case LT_NODE:               return gen_lt(ast);
+        case GT_NODE:               return gen_gt(ast);
+        case LE_NODE:               return gen_le(ast);
+        case GE_NODE:               return gen_ge(ast);
         /* code */
         break;
     

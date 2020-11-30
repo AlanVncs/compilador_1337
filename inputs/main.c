@@ -7,11 +7,13 @@
 int printint(int x);
 
 int main(int argc){
-    int x=1;
+    // int x=1;
     
-    x=1&&2;
+    // x=1&&2;
     // printf("%d\n",oi(1)&&oi(3));
-    printint(x);
+    printint(1<2);
+    printint(2<2);
+    printint(3<2);
 
     return 0;
 }
