@@ -17,10 +17,16 @@ digraph {
 				<td>7</td>
 			</tr>
 			<tr>
-				<td>main</td>
+				<td>fatorial</td>
 				<td>int</td>
 				<td>func_def</td>
 				<td>9</td>
+			</tr>
+			<tr>
+				<td>main</td>
+				<td>int</td>
+				<td>func_def</td>
+				<td>19</td>
 			</tr>
 		</table>>
 	];
@@ -35,12 +41,51 @@ digraph {
 				<td><i>Line</i></td>
 			</tr>
 			<tr>
-				<td>argc</td>
+				<td>n</td>
 				<td>int</td>
 				<td>variable</td>
 				<td>9</td>
 			</tr>
 		</table>>
 	];
+	2[shape=record label=
+		<<table border="0">
+			<tr><td colspan="4"><b>Scope ID: 2</b></td></tr>
+			<tr><td></td></tr>
+		</table>>
+	];
+	1 -> 2
+	3[shape=record label=
+		<<table border="0">
+			<tr><td colspan="4"><b>Scope ID: 3</b></td></tr>
+			<tr><td></td></tr>
+		</table>>
+	];
+	1 -> 3
 	0 -> 1
+	4[shape=record label=
+		<<table border="0">
+			<tr><td colspan="4"><b>Scope ID: 4</b></td></tr>
+			<tr><td></td></tr>
+			<tr>
+				<td><i>Name</i></td>
+				<td><i>Type</i></td>
+				<td><i>Kind</i></td>
+				<td><i>Line</i></td>
+			</tr>
+			<tr>
+				<td>argc</td>
+				<td>int</td>
+				<td>variable</td>
+				<td>19</td>
+			</tr>
+			<tr>
+				<td>x</td>
+				<td>int</td>
+				<td>variable</td>
+				<td>20</td>
+			</tr>
+		</table>>
+	];
+	0 -> 4
 }

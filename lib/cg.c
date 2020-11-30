@@ -269,13 +269,14 @@ int gen_Band(AST *ast){
     int r1=rec_gen(get_ast_child(ast, 1));
     char label1[10], label2[10];
 
-    fprintf(outFile, "\ttest \t%s, %s\n", reglist[r0], reglist[r0]);
     strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+    
+    fprintf(outFile, "\ttest \t%s, %s\n", reglist[r0], reglist[r0]);
     fprintf(outFile, "\tje \t%s\n", label1);
     fprintf(outFile, "\ttest \t%s, %s\n", reglist[r1], reglist[r1]);
     fprintf(outFile, "\tje \t%s\n", label1);
     fprintf(outFile, "\tmov \t$1, %s\n", reglist[r0]);
-    strcpy(label2, gen_next_label());
     fprintf(outFile, "\tjmp \t%s\n", label2);
     fprintf(outFile, "%s:\n", label1);
     // fputs(label1, outFile);
@@ -289,7 +290,7 @@ int gen_Band(AST *ast){
 }
 
 void gen_cmp_branches(char *instruction, char *label1, char *label2, int r0, int r1){
-    fprintf(outFile, "\tcmp \t %s, %s\n", reglist[r1], reglist[r0]);
+    fprintf(outFile, "\tcmp \t%s, %s\n", reglist[r1], reglist[r0]);
     fprintf(outFile, "\t%s  \t%s\n", instruction, label1);
     fprintf(outFile, "\tmov \t$0, %s\n", reglist[r0]);
     fprintf(outFile, "\tjmp \t%s\n", label2);
@@ -446,25 +447,44 @@ int gen_call(AST *ast){
 }
 
 //----------------------------------------
-//Code gen that handle branches
-// int gen_if(AST *ast){
-//     AST *exprBranch=get_ast_child(ast, 0);
-//     AST *trueBranch=get_ast_child(ast, 1);
-//     AST *elseBranch;
+// Code gen that handle branches
+int gen_if(AST *ast){
+    AST *exprBranch=get_ast_child(ast, 0);
+    AST *trueBranch=get_ast_child(ast, 1);
+    AST *elseBranch;
+    char label1[10], label2[10];
 
-//     int r0;
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
 
-//     switch (get_ast_length(ast)) {
-//         case 2:
-//             r0=rec_gen(exprBranch);
-//         break;
-//         case 3:
+    int r0;
 
-//     default:
-//         break;
-//     }
-    
-// }
+    r0=rec_gen(exprBranch);
+    fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
+    fprintf(outFile, "\tjz  \t%s\n", label1);
+    fprintf(outFile, "\tjmp \t%s\n", label2);
+    fprintf(outFile, "%s:\n", label1);
+
+    free_register(r0);
+    rec_gen(trueBranch);
+
+    switch (get_ast_length(ast)) {
+        case 2:         
+            fprintf(outFile, "%s:\n", label2);
+
+            return -1;
+        case 3:
+            elseBranch=get_ast_child(ast, 2);
+            fprintf(outFile, "%s:\n", label2);
+            rec_gen(elseBranch);
+
+            return -1;
+        default:
+            puts("Error in gen_if");
+            break;
+    }
+    return -1;
+}
 
 
 #define trace(msg)
@@ -486,6 +506,7 @@ int rec_gen(AST *ast){
         case INIT_DECL_LIST_NODE:   return gen_init_decl(ast);
         case RETURN_NODE:           return gen_ret(ast);
         case EXPRESSION_NODE:       return gen_expr(ast);
+        case IF_NODE:               return gen_if(ast);
         case ARGUMENT_LIST_NODE:    return gen_arg_list(ast);
         case VAR_USE_NODE:          return gen_var_use(ast);
         case PLUS_NODE:             return gen_add(ast);
