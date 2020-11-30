@@ -1,39 +1,65 @@
 	.file	"main.c"
-	.intel_syntax noprefix
 	.text
-	.globl	y
-	.data
-	.align 4
-	.type	y, @object
-	.size	y, 4
-y:
-	.long	6
-	.text
-	.globl	main
-	.type	main, @function
-main:
+	.globl	oi
+	.type	oi, @function
+oi:
 .LFB0:
 	.cfi_startproc
-	push	rbp
+	pushq	%rbp
 	.cfi_def_cfa_offset 16
 	.cfi_offset 6, -16
-	mov	rbp, rsp
+	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	mov	DWORD PTR -4[rbp], 4
-	mov	eax, DWORD PTR y[rip]
-	add	DWORD PTR -4[rbp], eax
-	mov	eax, 0
-	pop	rbp
+	movl	%edi, -4(%rbp)
+	addl	$1, -4(%rbp)
+	movl	-4(%rbp), %eax
+	addl	%eax, %eax
+	popq	%rbp
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
 .LFE0:
+	.size	oi, .-oi
+	.section	.rodata
+.LC0:
+	.string	"%d\n"
+	.text
+	.globl	main
+	.type	main, @function
+main:
+.LFB1:
+	.cfi_startproc
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp
+	.cfi_def_cfa_register 6
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	$1, -4(%rbp)
+	movl	$1, %edi
+	call	oi
+	testl	%eax, %eax
+	je	.L4
+	movl	$3, %edi
+	call	oi
+	testl	%eax, %eax
+	je	.L4
+	movl	$1, %eax
+	jmp	.L5
+.L4:
+	movl	$0, %eax
+.L5:
+	movl	%eax, %esi
+	leaq	.LC0(%rip), %rdi
+	movl	$0, %eax
+	call	printf@PLT
+	movl	$0, %eax
+	leave
+	.cfi_def_cfa 7, 8
+	ret
+	.cfi_endproc
+.LFE1:
 	.size	main, .-main
 	.ident	"GCC: (GNU) 10.2.0"
 	.section	.note.GNU-stack,"",@progbits
-
-
-mov $1, %rdi
-mov msg, %rsi
-mov 5, %rdx
-mov 1, %rax

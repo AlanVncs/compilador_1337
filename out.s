@@ -1,29 +1,24 @@
 .text
-.globl teste
-.type teste, @function
-.comm a,4,4
-teste:
-	push 	%rbp
-	mov 	%rsp, %rbp
-	mov 	%rdi, a(%rip)
-	mov 	a(%rip), %r8
-	mov 	$1, %r9
-	add 	%r9, %r8
-	mov 	%r8, %rax
-	mov 	%rbp, %rsp
-	pop 	%rbp
-	ret
-.text
 .globl main
 .type main, @function
+.comm argc,4,4
 main:
 	push 	%rbp
 	mov 	%rsp, %rbp
+	mov 	%rdi, argc(%rip)
 .comm x,4,4
-	mov 	$10, x(%rip)
-	mov 	x(%rip), %r8
-	mov 	$1, %r9
-	add 	%r9, %r8
+	mov 	$1, x(%rip)
+	mov 	$1, %r8
+	mov 	$2, %r9
+	test 	%r8, %r8
+	je 	.LC0
+	test 	%r9, %r9
+	je 	.LC0
+	mov 	$1, %r8
+	jmp 	.LC1
+.LC0:
+	mov 	$0, %r8
+.LC1:
 	mov 	x(%rip), %r9
 	mov 	%r8, %r9
 	mov 	%r9, x(%rip)
@@ -31,29 +26,8 @@ main:
 	mov 	%r8, %rdi
 	call 	printint
 	mov 	%rax, %r9
-	mov 	x(%rip), %r8
-	mov 	$5, %r9
-	sub 	%r9, %r8
-	mov 	x(%rip), %r9
-	mov 	%r8, %r9
-	mov 	%r9, x(%rip)
-	mov 	x(%rip), %r8
-	mov 	%r8, %rdi
-	call 	printint
-	mov 	%rax, %r9
-	mov 	$2, %r8
-	mov 	%r8, %rdi
-	call 	teste
-	mov 	%rax, %r9
-	mov 	x(%rip), %r8
-	mov 	%r9, %r8
-	mov 	%r8, x(%rip)
-	mov 	x(%rip), %r9
-	mov 	%r9, %rdi
-	call 	printint
-	mov 	%rax, %r10
-	mov 	$0, %r9
-	mov 	%r9, %rax
+	mov 	$0, %r8
+	mov 	%r8, %rax
 	mov 	%rbp, %rsp
 	pop 	%rbp
 	ret

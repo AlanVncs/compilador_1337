@@ -1,19 +1,18 @@
 #include <stdio.h>
 
+// int oi(int x){
+//     return ++x * 2;
+// }
+
 int printint(int x);
 
-int teste(int a){
-    return a+1;
-}
+int main(int argc){
+    int x=1;
+    
+    x=1&&2;
+    // printf("%d\n",oi(1)&&oi(3));
+    printint(x);
 
-int main(){
-    int x=10;
-    x+=1;
-    printint(x);
-    x-=5;
-    printint(x);
-    x=teste(2);
-    printint(x);
     return 0;
 }
 

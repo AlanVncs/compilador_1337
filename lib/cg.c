@@ -94,10 +94,16 @@ void genprintint(int r){
     fputs("\tcall \tprintf\n", outFile);
     genprologue();
 }
+// Label gen
+int  nextLabelId=0;
+char nextLabel[10];
+char *gen_next_label(){
+    sprintf(nextLabel, ".LC%d", nextLabelId++);
+    return nextLabel;
+}
 
-
+//----------------------------------------
 // Code gen that execs its childs -----------------------------------
-
 int gen_start(AST *ast){
     int childNum=get_ast_length(ast);
 
@@ -218,6 +224,32 @@ int gen_mul(AST *ast){
     return r0;
 }
 
+int gen_div(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+
+    fprintf(outFile, "\tmov \t%s, %%rax\n", reglist[r0]);
+    fprintf(outFile, "\tidiv \t%s\n", reglist[r1]);
+    fprintf(outFile, "\tmov \t%%rax, %s\n", reglist[r0]);
+
+    free_register(r1);
+
+    return r0;
+}
+
+int gen_mod(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+
+    fprintf(outFile, "\tmov \t%s, %%rax\n", reglist[r0]);
+    fprintf(outFile, "\tidiv \t%s\n", reglist[r1]);
+    fprintf(outFile, "\tmov \t%%rdx, %s\n", reglist[r0]);
+
+    free_register(r1);
+
+    return r0;
+}
+
 int gen_assign(AST *ast){
     int r1=rec_gen(get_ast_child(ast, 1));
     int r0=rec_gen(get_ast_child(ast, 0));
@@ -230,7 +262,33 @@ int gen_assign(AST *ast){
 
     return r0;
 }
+//----------------------------------------
+// Code gen that handle expr
+int gen_Band(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    char label1[10], label2[10];
 
+    fprintf(outFile, "\ttest \t%s, %s\n", reglist[r0], reglist[r0]);
+    strcpy(label1, gen_next_label());
+    fprintf(outFile, "\tje \t%s\n", label1);
+    fprintf(outFile, "\ttest \t%s, %s\n", reglist[r1], reglist[r1]);
+    fprintf(outFile, "\tje \t%s\n", label1);
+    fprintf(outFile, "\tmov \t$1, %s\n", reglist[r0]);
+    strcpy(label2, gen_next_label());
+    fprintf(outFile, "\tjmp \t%s\n", label2);
+    fprintf(outFile, "%s:\n", label1);
+    // fputs(label1, outFile);
+    fprintf(outFile, "\tmov \t$0, %s\n", reglist[r0]);
+    // fputs(label2, outFile);
+    fprintf(outFile, "%s:\n", label2);
+
+    free_register(r1);
+
+    return r0;
+}
+//----------------------------------------
+// Code gen that handle functions
 int gen_ret(AST *ast){
     int r=rec_gen(get_ast_child(ast, 0));
     fprintf(outFile, "\tmov \t%s, %%rax\n", reglist[r]);
@@ -238,8 +296,6 @@ int gen_ret(AST *ast){
     return -1;
 }
 
-
-//----------------------------------------
 int gen_param(AST *ast){
     for (size_t i = 0; i < get_ast_length(ast); i++){
         char *paramName=get_ast_name(get_ast_child(ast, i));
@@ -247,10 +303,6 @@ int gen_param(AST *ast){
     }
     return -1;
 }
-
-// int gen_func_def_one(AST *ast){
-//     fprintf(outFile, "\t mov %%rdi")
-// }
 
 int gen_func_def(AST *ast){
     AST *funcDeclNode=get_ast_child(ast, 0);
@@ -303,6 +355,28 @@ int gen_call(AST *ast){
     return gen_call_one(arg, nameNode);
 }
 
+//----------------------------------------
+//Code gen that handle branches
+// int gen_if(AST *ast){
+//     AST *exprBranch=get_ast_child(ast, 0);
+//     AST *trueBranch=get_ast_child(ast, 1);
+//     AST *elseBranch;
+
+//     int r0;
+
+//     switch (get_ast_length(ast)) {
+//         case 2:
+//             r0=rec_gen(exprBranch);
+//         break;
+//         case 3:
+
+//     default:
+//         break;
+//     }
+    
+// }
+
+
 #define trace(msg)
 #ifndef trace
 #define trace(msg) fprintf(outFile, "%s\n", msg)
@@ -327,6 +401,9 @@ int rec_gen(AST *ast){
         case PLUS_NODE:             return gen_add(ast);
         case MINUS_NODE:            return gen_sub(ast);
         case TIMES_NODE:            return gen_mul(ast);
+        case OVER_NODE:             return gen_div(ast);
+        case MOD_NODE:              return gen_mod(ast);
+        case AND_NODE:              return gen_Band(ast);
         /* code */
         break;
     

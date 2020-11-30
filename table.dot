@@ -14,13 +14,7 @@ digraph {
 				<td>printint</td>
 				<td>int</td>
 				<td>func_decl</td>
-				<td>3</td>
-			</tr>
-			<tr>
-				<td>teste</td>
-				<td>int</td>
-				<td>func_def</td>
-				<td>5</td>
+				<td>7</td>
 			</tr>
 			<tr>
 				<td>main</td>
@@ -41,23 +35,10 @@ digraph {
 				<td><i>Line</i></td>
 			</tr>
 			<tr>
-				<td>a</td>
+				<td>argc</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>5</td>
-			</tr>
-		</table>>
-	];
-	0 -> 1
-	2[shape=record label=
-		<<table border="0">
-			<tr><td colspan="4"><b>Scope ID: 2</b></td></tr>
-			<tr><td></td></tr>
-			<tr>
-				<td><i>Name</i></td>
-				<td><i>Type</i></td>
-				<td><i>Kind</i></td>
-				<td><i>Line</i></td>
+				<td>9</td>
 			</tr>
 			<tr>
 				<td>x</td>
@@ -67,5 +48,5 @@ digraph {
 			</tr>
 		</table>>
 	];
-	0 -> 2
+	0 -> 1
 }
