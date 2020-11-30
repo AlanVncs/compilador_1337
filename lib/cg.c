@@ -111,7 +111,8 @@ int gen_cpound(AST *ast){
     int childNum=get_ast_length(ast);
     
     for (int i=0; i<childNum; i++){
-        rec_gen(get_ast_child(ast, i));
+        int r=rec_gen(get_ast_child(ast, i));
+        if (r>0 && reglist[r]!=0) free_register(r);
     }
     return -1;
 }
@@ -120,7 +121,9 @@ int gen_init_decl(AST *ast){
     int childNum=get_ast_length(ast);
 
     for (int i=0; i<childNum; i++){
-        rec_gen(get_ast_child(ast, i));
+        int r=rec_gen(get_ast_child(ast, i));
+        if (r>0 && reglist[r]!=0) free_register(r);
+        
     }
     return -1;
 }
@@ -169,7 +172,7 @@ int gen_var_decl_init(AST *ast){
     int val=get_ast_data(datNode);
 
     fprintf(outFile, ".comm %s,4,4\n", varName);
-    fprintf(outFile, "\tmov \t$%d, %s(%rip)\n", val, varName);    
+    fprintf(outFile, "\tmov \t$%d, %s(%%rip)\n", val, varName);    
 
     return -1;
 }
@@ -177,7 +180,7 @@ int gen_var_decl_init(AST *ast){
 
 int gen_var_use(AST *ast){
     int r=alloc_register();
-    fprintf(outFile, "\tmov \t%s(%rip), %s\n", get_ast_name(ast), reglist[r]);
+    fprintf(outFile, "\tmov \t%s(%%rip), %s\n", get_ast_name(ast), reglist[r]);
 
     return r;
 }
@@ -187,8 +190,31 @@ int gen_add(AST *ast){
     int r0=rec_gen(get_ast_child(ast, 0));
     int r1=rec_gen(get_ast_child(ast, 1));
     fprintf(outFile, "\tadd \t%s, %s\n", reglist[r1], reglist[r0]);
+   
     free_register(r1);
 
+    return r0;
+}
+
+int gen_sub(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    fprintf(outFile, "\tsub \t%s, %s\n", reglist[r1], reglist[r0]);
+    
+    free_register(r1);
+
+    return r0;
+}
+
+int gen_mul(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    fprintf(outFile, "\timul \t%s, %s\n", reglist[r1], reglist[r0]);
+    // fprintf(outFile, "\tmov \t%s, %%rax\n", reglist[r0]);
+    // fprintf(outFile, "\tmov \t%%rax, %s\n", reglist[r1]);
+
+    free_register(r1);
+    
     return r0;
 }
 
@@ -197,7 +223,7 @@ int gen_assign(AST *ast){
     int r0=rec_gen(get_ast_child(ast, 0));
     fprintf(outFile, "\tmov \t%s, %s\n",reglist[r1], reglist[r0]);
     AST *nameNode=get_ast_child(ast, 0);
-    fprintf(outFile, "\tmov \t%s, %s(%rip)\n", reglist[r0], get_ast_name(nameNode));
+    fprintf(outFile, "\tmov \t%s, %s(%%rip)\n", reglist[r0], get_ast_name(nameNode));
 
     free_register(r1);
     // free_register(r0);
@@ -207,25 +233,47 @@ int gen_assign(AST *ast){
 
 int gen_ret(AST *ast){
     int r=rec_gen(get_ast_child(ast, 0));
-    fprintf(outFile, "\tmov \t%s, %rax\n", reglist[r]);
+    fprintf(outFile, "\tmov \t%s, %%rax\n", reglist[r]);
     free_register(r);
     return -1;
 }
 
 
 //----------------------------------------
+int gen_param(AST *ast){
+    for (size_t i = 0; i < get_ast_length(ast); i++){
+        char *paramName=get_ast_name(get_ast_child(ast, i));
+        fprintf(outFile, ".comm %s,4,4\n", paramName);
+    }
+    return -1;
+}
+
+// int gen_func_def_one(AST *ast){
+//     fprintf(outFile, "\t mov %%rdi")
+// }
+
 int gen_func_def(AST *ast){
-    // AST *leftTree =get_ast_child(ast, 0);
+    AST *funcDeclNode=get_ast_child(ast, 0);
+    AST *paramNode   =get_ast_child(funcDeclNode, 1);
     // AST *nameNode =get_ast_child(leftTree, 0);
-    // AST *paramNode=get_ast_child(leftTree, 1);
     char *name=get_ast_name(ast);
     // int childNum=get_ast_length(paramNode);
 
     fprintf(outFile, ".text\n.globl %s\n.type %s, @function\n", name, name);
-        
+    gen_param(paramNode);
         
     fprintf(outFile, "%s:\n", name);
     genprologue();
+
+    switch (get_ast_length(paramNode)){
+    case 1:
+        fprintf(outFile, "\tmov \t%%rdi, %s(%%rip)\n", get_ast_name(get_ast_child(paramNode, 0)));
+        break;
+    
+    default:
+        break;
+    }
+
     rec_gen(get_ast_child(ast, 1));
     genepilogue();
     return -1;
@@ -235,9 +283,9 @@ int gen_func_def(AST *ast){
 int gen_call_one(int r, AST *ast){
     
     int res=alloc_register();   
-    fprintf(outFile, "\tmov \t%s, %rdi\n", reglist[r]);
+    fprintf(outFile, "\tmov \t%s, %%rdi\n", reglist[r]);
     fprintf(outFile, "\tcall \t%s\n", get_ast_name(ast));
-    fprintf(outFile, "\tmov \t%rax, %s\n", reglist[res]);
+    fprintf(outFile, "\tmov \t%%rax, %s\n", reglist[res]);
 
     free_register(r);
     
@@ -256,7 +304,7 @@ int gen_call(AST *ast){
 }
 
 #define trace(msg)
-#ifndef trace(msg)
+#ifndef trace
 #define trace(msg) fprintf(outFile, "%s\n", msg)
 #endif
 
@@ -277,6 +325,8 @@ int rec_gen(AST *ast){
         case ARGUMENT_LIST_NODE:    return gen_arg_list(ast);
         case VAR_USE_NODE:          return gen_var_use(ast);
         case PLUS_NODE:             return gen_add(ast);
+        case MINUS_NODE:            return gen_sub(ast);
+        case TIMES_NODE:            return gen_mul(ast);
         /* code */
         break;
     
