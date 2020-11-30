@@ -7,27 +7,12 @@
 int printint(int x);
 
 int main(int argc){
-    int x;
-    if (1==2){
-        printint(30);
+    int x=0;
+    while(x<5){
+        printint(x++);
     }
-    else{
-        printint(20);
-    }
-
-    printint(10);
-
     return 0;
 }
-
-
-
-
-
-
-
-
-
 
 
 // int fatorial(int n){

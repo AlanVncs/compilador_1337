@@ -447,7 +447,7 @@ int gen_call(AST *ast){
 }
 
 //----------------------------------------
-// Code gen that handle branches
+// Code gen that handle conditional branches
 int gen_if(AST *ast){
     AST *exprBranch=get_ast_child(ast, 0);
     AST *trueBranch=get_ast_child(ast, 1);
@@ -486,6 +486,27 @@ int gen_if(AST *ast){
     return -1;
 }
 
+int gen_while(AST *ast){
+    AST *exprBranch=get_ast_child(ast, 0);
+    AST *stmtBranch=get_ast_child(ast, 1);
+    char label1[10], label2[10], label3[10];
+
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+    strcpy(label3, gen_next_label());
+
+    fprintf(outFile, "%s:\n", label3);
+    int r0=rec_gen(exprBranch);
+    fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
+    fprintf(outFile, "\tjz  \t%s\n", label1);
+    fprintf(outFile, "\tjmp \t%s\n", label2);
+    fprintf(outFile, "%s:\n", label1);
+    rec_gen(stmtBranch);
+    fprintf(outFile, "\tjmp \t%s\n", label3);
+    fprintf(outFile, "%s:\n", label2);
+    return -1;
+}
+//----------------------------------------
 
 #define trace(msg)
 #ifndef trace
@@ -507,6 +528,7 @@ int rec_gen(AST *ast){
         case RETURN_NODE:           return gen_ret(ast);
         case EXPRESSION_NODE:       return gen_expr(ast);
         case IF_NODE:               return gen_if(ast);
+        case WHILE_NODE:            return gen_while(ast);
         case ARGUMENT_LIST_NODE:    return gen_arg_list(ast);
         case VAR_USE_NODE:          return gen_var_use(ast);
         case PLUS_NODE:             return gen_add(ast);
