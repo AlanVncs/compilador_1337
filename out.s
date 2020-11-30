@@ -9,7 +9,7 @@ main:
 	mov 	$1, %r8
 	mov 	$2, %r9
 	cmp 	 %r9, %r8
-	jb  	.LC0
+	je  	.LC0
 	mov 	$0, %r8
 	jmp 	.LC1
 .LC0:
@@ -21,7 +21,7 @@ main:
 	mov 	$2, %r8
 	mov 	$2, %r9
 	cmp 	 %r9, %r8
-	jb  	.LC2
+	je  	.LC2
 	mov 	$0, %r8
 	jmp 	.LC3
 .LC2:
@@ -33,7 +33,7 @@ main:
 	mov 	$3, %r8
 	mov 	$2, %r9
 	cmp 	 %r9, %r8
-	jb  	.LC4
+	je  	.LC4
 	mov 	$0, %r8
 	jmp 	.LC5
 .LC4:

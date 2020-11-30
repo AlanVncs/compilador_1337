@@ -11,9 +11,9 @@ int main(int argc){
     
     // x=1&&2;
     // printf("%d\n",oi(1)&&oi(3));
-    printint(1<2);
-    printint(2<2);
-    printint(3<2);
+    printint(1==2);
+    printint(2==2);
+    printint(3==2);
 
     return 0;
 }
