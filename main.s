@@ -1,8 +1,8 @@
 	.file	"main.c"
 	.text
-	.globl	oi
-	.type	oi, @function
-oi:
+	.globl	fatorial
+	.type	fatorial, @function
+fatorial:
 .LFB0:
 	.cfi_startproc
 	pushq	%rbp
@@ -10,20 +10,25 @@ oi:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
+	subq	$16, %rsp
 	movl	%edi, -4(%rbp)
-	addl	$1, -4(%rbp)
+	cmpl	$1, -4(%rbp)
+	jne	.L2
+	movl	$1, %eax
+	jmp	.L3
+.L2:
 	movl	-4(%rbp), %eax
-	addl	%eax, %eax
-	popq	%rbp
+	subl	$1, %eax
+	movl	%eax, %edi
+	call	fatorial
+	imull	-4(%rbp), %eax
+.L3:
+	leave
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
 .LFE0:
-	.size	oi, .-oi
-	.section	.rodata
-.LC0:
-	.string	"%d\n"
-	.text
+	.size	fatorial, .-fatorial
 	.globl	main
 	.type	main, @function
 main:
@@ -36,24 +41,12 @@ main:
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movl	$1, -4(%rbp)
-	movl	$1, %edi
-	call	oi
-	testl	%eax, %eax
-	je	.L4
-	movl	$3, %edi
-	call	oi
-	testl	%eax, %eax
-	je	.L4
-	movl	$1, %eax
-	jmp	.L5
-.L4:
-	movl	$0, %eax
-.L5:
-	movl	%eax, %esi
-	leaq	.LC0(%rip), %rdi
-	movl	$0, %eax
-	call	printf@PLT
+	movl	$5, %edi
+	call	fatorial
+	movl	%eax, -4(%rbp)
+	movl	-4(%rbp), %eax
+	movl	%eax, %edi
+	call	printint@PLT
 	movl	$0, %eax
 	leave
 	.cfi_def_cfa 7, 8

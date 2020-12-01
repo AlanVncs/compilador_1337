@@ -6,19 +6,25 @@
 
 extern FILE *outFile;
 
-static int freereg[4];
-static char *reglist[4]= { "%r8", "%r9", "%r10", "%r11" };
+#define trace(msg)
+#ifndef trace
+#define trace(msg) fprintf(outFile, "%s\n", msg)
+#endif
+
+
+static int freereg[6];
+static char *reglist[6]= { "%r8", "%r9", "%r10", "%r11", "%rcx", "%rdx" };
 
 
 // Set all registers as available
 void freeall_registers(void){
-    freereg[0]= freereg[1]= freereg[2]= freereg[3]= 1;
+    freereg[0]= freereg[1]= freereg[2]= freereg[3]= freereg[4]= freereg[5]= 1;
 }
 
 // Allocate a free register. Return the number of
 // the register. Die if no available registers.
 static int alloc_register(void){
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<6; i++) {
         if (freereg[i]) {
             freereg[i]= 0;
             return(i);
@@ -186,6 +192,7 @@ int gen_var_decl_init(AST *ast){
 
 int gen_var_use(AST *ast){
     int r=alloc_register();
+    trace("var_use");
     fprintf(outFile, "\tmov \t%s(%%rip), %s\n", get_ast_name(ast), reglist[r]);
 
     return r;
@@ -253,6 +260,7 @@ int gen_mod(AST *ast){
 int gen_assign(AST *ast){
     int r1=rec_gen(get_ast_child(ast, 1));
     int r0=rec_gen(get_ast_child(ast, 0));
+    trace("assign");
     fprintf(outFile, "\tmov \t%s, %s\n",reglist[r1], reglist[r0]);
     AST *nameNode=get_ast_child(ast, 0);
     fprintf(outFile, "\tmov \t%s, %s(%%rip)\n", reglist[r0], get_ast_name(nameNode));
@@ -307,6 +315,7 @@ int gen_lt(AST *ast){
     strcpy(label1, gen_next_label());
     strcpy(label2, gen_next_label());
 
+    trace("<");
     gen_cmp_branches("jb", label1, label2, r0, r1);
     
     free_register(r1);
@@ -322,7 +331,7 @@ int gen_gt(AST *ast){
     strcpy(label1, gen_next_label());
     strcpy(label2, gen_next_label());
 
-
+    trace(">");
     gen_cmp_branches("ja", label1, label2, r0, r1);
     
     free_register(r1);
@@ -339,6 +348,7 @@ int gen_le(AST *ast){
     strcpy(label2, gen_next_label());
 
 
+    trace("<=");
     gen_cmp_branches("jbe", label1, label2, r0, r1);
     
     free_register(r1);
@@ -354,7 +364,7 @@ int gen_ge(AST *ast){
     strcpy(label1, gen_next_label());
     strcpy(label2, gen_next_label());
 
-
+    trace(">=");
     gen_cmp_branches("jae", label1, label2, r0, r1);
     
     free_register(r1);
@@ -370,7 +380,7 @@ int gen_equ(AST *ast){
     strcpy(label1, gen_next_label());
     strcpy(label2, gen_next_label());
 
-
+    trace("==");
     gen_cmp_branches("je", label1, label2, r0, r1);
     
     free_register(r1);
@@ -452,13 +462,15 @@ int gen_if(AST *ast){
     AST *exprBranch=get_ast_child(ast, 0);
     AST *trueBranch=get_ast_child(ast, 1);
     AST *elseBranch;
-    char label1[10], label2[10];
+    char label1[10], label2[10], label3[10];
 
     strcpy(label1, gen_next_label());
     strcpy(label2, gen_next_label());
+    strcpy(label3, gen_next_label());
 
     int r0;
 
+    trace("if");
     r0=rec_gen(exprBranch);
     fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
     fprintf(outFile, "\tjz  \t%s\n", label1);
@@ -467,22 +479,25 @@ int gen_if(AST *ast){
 
     free_register(r0);
     rec_gen(trueBranch);
-
     switch (get_ast_length(ast)) {
         case 2:         
             fprintf(outFile, "%s:\n", label2);
 
             return -1;
         case 3:
+            fprintf(outFile, "\tjmp \t%s\n", label3);
             elseBranch=get_ast_child(ast, 2);
             fprintf(outFile, "%s:\n", label2);
             rec_gen(elseBranch);
+            fprintf(outFile, "%s:\n", label3);
 
             return -1;
         default:
             puts("Error in gen_if");
             break;
     }
+
+
     return -1;
 }
 
@@ -508,35 +523,29 @@ int gen_while(AST *ast){
 }
 //----------------------------------------
 
-#define trace(msg)
-#ifndef trace
-#define trace(msg) fprintf(outFile, "%s\n", msg)
-#endif
-
 int rec_gen(AST *ast){
-    trace("zinfundeu");
     switch (get_ast_kind(ast)){
-        case PROGRAM_START_NODE:    return gen_start(ast);
-        case FUNCTION_CALL_NODE:    return gen_call(ast);
-        case COMPOUND_STMT_NODE:    return gen_cpound(ast);
-        case INT_VAL_NODE:          return gen_int_val(ast);
+        case PROGRAM_START_NODE:    /* trace("prog_start"); */return gen_start(ast);
+        case FUNCTION_CALL_NODE:    /* trace("func_call"); */return gen_call(ast);
+        case COMPOUND_STMT_NODE:    /* trace("cpund_stmt"); */return gen_cpound(ast);
+        case INT_VAL_NODE:          /* trace("int_val"); */return gen_int_val(ast);
         case ASSIGN_NODE:           return gen_assign(ast);
-        case VAR_DECL_NODE:         return gen_var_decl(ast);
-        case VAR_DECL_INIT_NODE:    return gen_var_decl_init(ast);
-        case FUNCTION_DEF_NODE:     return gen_func_def(ast);
-        case INIT_DECL_LIST_NODE:   return gen_init_decl(ast);
-        case RETURN_NODE:           return gen_ret(ast);
-        case EXPRESSION_NODE:       return gen_expr(ast);
-        case IF_NODE:               return gen_if(ast);
-        case WHILE_NODE:            return gen_while(ast);
-        case ARGUMENT_LIST_NODE:    return gen_arg_list(ast);
+        case VAR_DECL_NODE:         /* trace("var_decl"); */return gen_var_decl(ast);
+        case VAR_DECL_INIT_NODE:    /* trace("var_init"); */return gen_var_decl_init(ast);
         case VAR_USE_NODE:          return gen_var_use(ast);
-        case PLUS_NODE:             return gen_add(ast);
-        case MINUS_NODE:            return gen_sub(ast);
-        case TIMES_NODE:            return gen_mul(ast);
-        case OVER_NODE:             return gen_div(ast);
-        case MOD_NODE:              return gen_mod(ast);
-        case AND_NODE:              return gen_Band(ast);
+        case FUNCTION_DEF_NODE:     /* trace("func_def"); */return gen_func_def(ast);
+        case INIT_DECL_LIST_NODE:   /* trace("init_list"); */return gen_init_decl(ast);
+        case RETURN_NODE:           /* trace("ret"); */return gen_ret(ast);
+        case EXPRESSION_NODE:       /* trace("expr"); */return gen_expr(ast);
+        case IF_NODE:               return gen_if(ast);
+        case WHILE_NODE:            /* trace(" while");*/return gen_while(ast);
+        case ARGUMENT_LIST_NODE:    /* trace(" arg_list");*/return gen_arg_list(ast);
+        case PLUS_NODE:             /* trace("+"); */return gen_add(ast);
+        case MINUS_NODE:            /* trace("-"); */return gen_sub(ast);
+        case TIMES_NODE:            /* trace("*"); */return gen_mul(ast);
+        case OVER_NODE:             /* trace("/"); */return gen_div(ast);
+        case MOD_NODE:              /* trace("%%"); */return gen_mod(ast);
+        case AND_NODE:              /* trace(" and");*/return gen_Band(ast);
         case LT_NODE:               return gen_lt(ast);
         case GT_NODE:               return gen_gt(ast);
         case LE_NODE:               return gen_le(ast);
