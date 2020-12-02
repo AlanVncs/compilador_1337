@@ -1,13 +1,13 @@
 .text
-.globl fatorial
-.type fatorial, @function
-.comm n,4,4
-fatorial:
+.globl teste
+.type teste, @function
+.comm k,4,4
+teste:
 	push 	%rbp
 	mov 	%rsp, %rbp
-	mov 	%rdi, n(%rip)
-	mov 	n(%rip), %r8
-	mov 	$1, %r9
+	mov 	%rdi, k
+	mov 	k, %r8
+	mov 	$2, %r9
 	cmp 	%r9, %r8
 	je  	.LC3
 	mov 	$0, %r8
@@ -19,18 +19,19 @@ fatorial:
 	jz  	.LC0
 	jmp 	.LC1
 .LC0:
+	mov 	k, %r8
+	mov 	%r8, %rdi
+	call 	printint
+	mov 	%rax, %r9
 	mov 	$1, %r8
 	mov 	%r8, %rax
 	jmp 	.LC2
 .LC1:
-	mov 	n(%rip), %r8
-	mov 	n(%rip), %r9
-	mov 	$1, %r10
-	sub 	%r10, %r9
-	mov 	%r9, %rdi
-	call 	fatorial
-	mov 	%rax, %r10
-	imul 	%r10, %r8
+	mov 	k, %r8
+	mov 	%r8, %rdi
+	call 	printint
+	mov 	%rax, %r9
+	mov 	$2, %r8
 	mov 	%r8, %rax
 .LC2:
 	mov 	%rbp, %rsp
@@ -43,16 +44,32 @@ fatorial:
 main:
 	push 	%rbp
 	mov 	%rsp, %rbp
-	mov 	%rdi, argc(%rip)
-.comm f,4,4
-	mov 	$5, %r8
+	mov 	%rdi, argc
+.comm x,4,4
+	mov 	$2, x
+.comm y,4,4
+	mov 	$3, y
+.comm j,4,4
+.comm l,4,4
+	mov 	x, %r8
 	mov 	%r8, %rdi
-	call 	fatorial
+	call 	teste
 	mov 	%rax, %r9
-	mov 	f(%rip), %r8
+	mov 	j, %r8
 	mov 	%r9, %r8
-	mov 	%r8, f(%rip)
-	mov 	f(%rip), %r9
+	mov 	%r8, j
+	mov 	y, %r9
+	mov 	%r9, %rdi
+	call 	teste
+	mov 	%rax, %r10
+	mov 	l, %r9
+	mov 	%r10, %r9
+	mov 	%r9, l
+	mov 	j, %r9
+	mov 	%r9, %rdi
+	call 	printint
+	mov 	%rax, %r10
+	mov 	l, %r9
 	mov 	%r9, %rdi
 	call 	printint
 	mov 	%rax, %r10

@@ -17,16 +17,16 @@ digraph {
 				<td>7</td>
 			</tr>
 			<tr>
-				<td>fatorial</td>
+				<td>teste</td>
 				<td>int</td>
 				<td>func_def</td>
-				<td>19</td>
+				<td>9</td>
 			</tr>
 			<tr>
 				<td>main</td>
 				<td>int</td>
 				<td>func_def</td>
-				<td>27</td>
+				<td>19</td>
 			</tr>
 		</table>>
 	];
@@ -41,10 +41,10 @@ digraph {
 				<td><i>Line</i></td>
 			</tr>
 			<tr>
-				<td>n</td>
+				<td>k</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>19</td>
+				<td>9</td>
 			</tr>
 		</table>>
 	];
@@ -77,13 +77,31 @@ digraph {
 				<td>argc</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>27</td>
+				<td>19</td>
 			</tr>
 			<tr>
-				<td>f</td>
+				<td>x</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>44</td>
+				<td>20</td>
+			</tr>
+			<tr>
+				<td>y</td>
+				<td>int</td>
+				<td>variable</td>
+				<td>21</td>
+			</tr>
+			<tr>
+				<td>j</td>
+				<td>int</td>
+				<td>variable</td>
+				<td>26</td>
+			</tr>
+			<tr>
+				<td>l</td>
+				<td>int</td>
+				<td>variable</td>
+				<td>27</td>
 			</tr>
 		</table>>
 	];
