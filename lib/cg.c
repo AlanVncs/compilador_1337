@@ -171,7 +171,7 @@ int gen_int_val(AST *ast){
 
 int gen_var_decl(AST *ast){
     // int data=get_ast_data(ast);
-    fprintf(outFile, ".comm %s,4,4\n", get_ast_name(ast));
+    fprintf(outFile, ".comm %s,8,8\n", get_ast_name(ast));
 
     return -1;
 }
@@ -183,7 +183,7 @@ int gen_var_decl_init(AST *ast){
     char *varName=get_ast_name(varNode);
     int val=get_ast_data(datNode);
 
-    fprintf(outFile, ".comm %s,4,4\n", varName);
+    fprintf(outFile, ".comm %s,8,8\n", varName);
     fprintf(outFile, "\tmov \t$%d, %s(%%rip)\n", val, varName);    
 
     return -1;
@@ -400,7 +400,7 @@ int gen_ret(AST *ast){
 int gen_param(AST *ast){
     for (size_t i = 0; i < get_ast_length(ast); i++){
         char *paramName=get_ast_name(get_ast_child(ast, i));
-        fprintf(outFile, ".comm %s,4,4\n", paramName);
+        fprintf(outFile, ".comm %s,8,8\n", paramName);
     }
     return -1;
 }
