@@ -21,8 +21,14 @@ int printint(int x);
 int main(int argc){    
     // int x=2;
     // int y=3;
+    int i=0;
 
-    printint(0||1);
+    do{
+        // i++;
+        printint(i++);
+    } while (i<5);
+    printint(i);
+    
     // printint(y==2);
 
     // int j;

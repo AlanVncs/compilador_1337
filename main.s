@@ -10,9 +10,19 @@ main:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	subq	$16, %rsp
-	movl	%edi, -4(%rbp)
-	movl	$1, %edi
+	subq	$32, %rsp
+	movl	%edi, -20(%rbp)
+	movl	$0, -4(%rbp)
+.L2:
+	movl	-4(%rbp), %eax
+	leal	1(%rax), %edx
+	movl	%edx, -4(%rbp)
+	movl	%eax, %edi
+	call	printint@PLT
+	cmpl	$4, -4(%rbp)
+	jle	.L2
+	movl	-4(%rbp), %eax
+	movl	%eax, %edi
 	call	printint@PLT
 	movl	$0, %eax
 	leave

@@ -542,6 +542,29 @@ int gen_while(AST *ast){
     rec_gen(stmtBranch);
     fprintf(outFile, "\tjmp \t%s\n", label3);
     fprintf(outFile, "%s:\n", label2);
+
+    free_register(r0);
+
+    return -1;
+}
+
+int gen_do_while(AST *ast){
+    AST *stmtBranch=get_ast_child(ast, 0);
+    AST *exprBranch=get_ast_child(ast, 1);
+
+    char label1[10], label2[10];
+    
+    strcpy(label1, gen_next_label());
+    // strcpy(label2, gen_next_label());
+
+    fprintf(outFile, "%s:\n", label1);
+    rec_gen(stmtBranch);
+    int r0=rec_gen(exprBranch);
+    fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
+    fprintf(outFile, "\tjz  \t%s\n", label1);
+
+    free_register(r0);
+
     return -1;
 }
 //----------------------------------------
@@ -562,6 +585,7 @@ int rec_gen(AST *ast){
         case EXPRESSION_NODE:       /* trace("expr"); */return gen_expr(ast);
         case IF_NODE:               return gen_if(ast);
         case WHILE_NODE:            /* trace(" while");*/return gen_while(ast);
+        case DO_WHILE_NODE:         return gen_do_while(ast);
         case ARGUMENT_LIST_NODE:    /* trace(" arg_list");*/return gen_arg_list(ast);
         case PLUS_NODE:             /* trace("+"); */return gen_add(ast);
         case MINUS_NODE:            /* trace("-"); */return gen_sub(ast);
