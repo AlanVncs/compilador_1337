@@ -4,7 +4,7 @@
 //     return ++x * 2;
 // }
 
-// int printint(int x);
+int printint(int x);
 
 // int teste(int k){
 //     if (k==2){
@@ -16,13 +16,13 @@
 //     }
 // }
 
-int main(int argc){
-    double oi=1.2;
-    
+
+
+int main(int argc){    
     // int x=2;
     // int y=3;
 
-    // printint(x==1);
+    printint(0||1);
     // printint(y==2);
 
     // int j;

@@ -272,7 +272,7 @@ int gen_assign(AST *ast){
 }
 //----------------------------------------
 // Code gen that handle bool expr
-int gen_Band(AST *ast){
+int gen_Land(AST *ast){
     int r0=rec_gen(get_ast_child(ast, 0));
     int r1=rec_gen(get_ast_child(ast, 1));
     char label1[10], label2[10];
@@ -290,6 +290,29 @@ int gen_Band(AST *ast){
     // fputs(label1, outFile);
     fprintf(outFile, "\tmov \t$0, %s\n", reglist[r0]);
     // fputs(label2, outFile);
+    fprintf(outFile, "%s:\n", label2);
+
+    free_register(r1);
+
+    return r0;
+}
+
+int gen_Lor(AST *ast){
+    int r0=rec_gen(get_ast_child(ast, 0));
+    int r1=rec_gen(get_ast_child(ast, 1));
+    char label1[10], label2[10];
+
+    strcpy(label1, gen_next_label());
+    strcpy(label2, gen_next_label());
+    
+    fprintf(outFile, "\tor \t%s, %s\n", reglist[r1], reglist[r0]);
+    // fprintf(outFile, "\tor \t%s, %s\n", reglist[r0], reglist[r1]);
+    // fprintf(outFile, "\ttest \t%s, %s\n", reglist[r0], reglist[r0]);
+    fprintf(outFile, "\tje \t%s\n", label1);
+    fprintf(outFile, "\tmov \t$1, %s\n", reglist[r0]);
+    fprintf(outFile, "\tjmp %s\n", label2);
+    fprintf(outFile, "%s:\n", label1);
+    fprintf(outFile, "\tmov \t$0, %s\n", reglist[r0]);
     fprintf(outFile, "%s:\n", label2);
 
     free_register(r1);
@@ -545,7 +568,8 @@ int rec_gen(AST *ast){
         case TIMES_NODE:            /* trace("*"); */return gen_mul(ast);
         case OVER_NODE:             /* trace("/"); */return gen_div(ast);
         case MOD_NODE:              /* trace("%%"); */return gen_mod(ast);
-        case AND_NODE:              /* trace(" and");*/return gen_Band(ast);
+        case AND_NODE:              /* trace(" and");*/return gen_Land(ast);
+        case OR_NODE:               return gen_Lor(ast);
         case LT_NODE:               return gen_lt(ast);
         case GT_NODE:               return gen_gt(ast);
         case LE_NODE:               return gen_le(ast);
