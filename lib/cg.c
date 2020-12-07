@@ -495,8 +495,8 @@ int gen_if(AST *ast){
 
     trace("if");
     r0=rec_gen(exprBranch);
-    fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
-    fprintf(outFile, "\tjz  \t%s\n", label1);
+    fprintf(outFile, "\tcmp \t$0, %s\n", reglist[r0]);
+    fprintf(outFile, "\tja  \t%s\n", label1);
     fprintf(outFile, "\tjmp \t%s\n", label2);
     fprintf(outFile, "%s:\n", label1);
 
