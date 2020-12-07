@@ -535,8 +535,8 @@ int gen_while(AST *ast){
 
     fprintf(outFile, "%s:\n", label3);
     int r0=rec_gen(exprBranch);
-    fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
-    fprintf(outFile, "\tjz  \t%s\n", label1);
+    fprintf(outFile, "\tcmp \t$0, %s\n", reglist[r0]);
+    fprintf(outFile, "\tja  \t%s\n", label1);
     fprintf(outFile, "\tjmp \t%s\n", label2);
     fprintf(outFile, "%s:\n", label1);
     rec_gen(stmtBranch);
@@ -552,7 +552,7 @@ int gen_do_while(AST *ast){
     AST *stmtBranch=get_ast_child(ast, 0);
     AST *exprBranch=get_ast_child(ast, 1);
 
-    char label1[10], label2[10];
+    char label1[10];
     
     strcpy(label1, gen_next_label());
     // strcpy(label2, gen_next_label());
@@ -560,8 +560,8 @@ int gen_do_while(AST *ast){
     fprintf(outFile, "%s:\n", label1);
     rec_gen(stmtBranch);
     int r0=rec_gen(exprBranch);
-    fprintf(outFile, "\tcmp \t$1, %s\n", reglist[r0]);
-    fprintf(outFile, "\tjz  \t%s\n", label1);
+    fprintf(outFile, "\tcmp \t$0, %s\n", reglist[r0]);
+    fprintf(outFile, "\tja  \t%s\n", label1);
 
     free_register(r0);
 

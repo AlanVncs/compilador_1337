@@ -21,12 +21,12 @@ int printint(int x);
 int main(int argc){    
     // int x=2;
     // int y=3;
-    int i=0;
+    int i=5;
 
     do{
         // i++;
-        printint(i++);
-    } while (i<5);
+        printint(i--);
+    } while (i);
     printint(i);
     
     // printint(y==2);

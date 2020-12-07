@@ -12,15 +12,15 @@ main:
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
-	movl	$0, -4(%rbp)
+	movl	$5, -4(%rbp)
 .L2:
 	movl	-4(%rbp), %eax
-	leal	1(%rax), %edx
+	leal	-1(%rax), %edx
 	movl	%edx, -4(%rbp)
 	movl	%eax, %edi
 	call	printint@PLT
-	cmpl	$4, -4(%rbp)
-	jle	.L2
+	cmpl	$0, -4(%rbp)
+	jne	.L2
 	movl	-4(%rbp), %eax
 	movl	%eax, %edi
 	call	printint@PLT
