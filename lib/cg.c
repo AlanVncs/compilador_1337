@@ -158,13 +158,12 @@ int gen_load(int value){
     int r= alloc_register();
 
     fprintf(outFile, "\tmov \t$%d, %s\n", value, reglist[r]);
-    return(r);
+    return r;
 }
 
 int gen_int_val(AST *ast){
     int data=get_ast_data(ast);
     int r=gen_load(data);
-    // fprintf(outFile, "\tmov %s, %d\n", reglist[reg1], data);
 
     return r;
 }
@@ -181,11 +180,18 @@ int gen_var_decl_init(AST *ast){
     AST *datNode=get_ast_child(ast, 1);
 
     char *varName=get_ast_name(varNode);
-    int val=get_ast_data(datNode);
-
-    fprintf(outFile, ".comm %s,8,8\n", varName);
-    fprintf(outFile, "\tmov \t$%d, %s(%%rip)\n", val, varName);    
-
+    int val;
+    if (get_ast_kind(datNode)==INT_VAL_NODE){
+        val=get_ast_data(datNode);
+        fprintf(outFile, ".comm %s,8,8\n", varName);
+        fprintf(outFile, "\tmov \t$%d, %s(%%rip)\n", val, varName);    
+    }
+    else{
+        val=rec_gen(datNode);
+        fprintf(outFile, ".comm %s,8,8\n", varName);
+        fprintf(outFile, "\tmov \t%s, %s(%%rip)\n", reglist[val], varName);    
+    }
+    
     return -1;
 }
 
@@ -445,7 +451,10 @@ int gen_func_def(AST *ast){
     case 1:
         fprintf(outFile, "\tmov \t%%rdi, %s(%%rip)\n", get_ast_name(get_ast_child(paramNode, 0)));
         break;
-    
+    case 2:
+        fprintf(outFile, "\tmov \t%%rsi, %s(%%rip)\n", get_ast_name(get_ast_child(paramNode, 1)));
+        fprintf(outFile, "\tmov \t%%rdi, %s(%%rip)\n", get_ast_name(get_ast_child(paramNode, 0)));
+
     default:
         break;
     }
@@ -468,15 +477,43 @@ int gen_call_one(int r, AST *ast){
     return res;
 }
 
+// Two args
+int gen_call_two(int r0, int r1, AST *ast){
+    // AST *argList =get_ast_child(ast, 1);
+    // AST *nameNode=get_ast_child(ast, 0);
+
+    int res=alloc_register();   
+    fprintf(outFile, "\tmov \t%s, %%rsi\n", reglist[r1]);
+    fprintf(outFile, "\tmov \t%s, %%rdi\n", reglist[r0]);
+    fprintf(outFile, "\tcall \t%s\n", get_ast_name(ast));
+    fprintf(outFile, "\tmov \t%%rax, %s\n", reglist[res]);
+
+    free_register(r0);
+    free_register(r1);
+
+    return res;
+}
 
 int gen_call(AST *ast){
     AST *argList =get_ast_child(ast, 1);
     AST *nameNode=get_ast_child(ast, 0);
 
-    int arg;
-    arg=rec_gen(argList);
+    int arg1, arg2;
+    // arg=rec_gen(argList);
 
-    return gen_call_one(arg, nameNode);
+    switch (get_ast_length(argList)){
+        case 1:
+            arg1=rec_gen(argList);
+            return gen_call_one(arg1, nameNode);
+        
+        case 2:
+            arg1=rec_gen(get_ast_child(argList, 0));
+            arg2=rec_gen(get_ast_child(argList, 1));
+            return gen_call_two(arg1, arg2, nameNode);
+        default:
+            printf("unexpected error in gen_call\n");
+            exit(EXIT_FAILURE);
+    }
 }
 
 //----------------------------------------
