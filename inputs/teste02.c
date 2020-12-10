@@ -1,5 +1,9 @@
 #include <stdio.h>
 
+/* 
+    Esses testes soh funcionam pro parser
+*/
+
 int main(int argc){
     int x = 10;
     switch(x){

@@ -1,5 +1,9 @@
 #include <stdio.h>
 
+/* 
+    Esses testes soh funcionam pro parser
+*/
+
 int fatorial(int n);
 
 int main(int argc){

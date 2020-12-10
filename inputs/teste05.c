@@ -1,5 +1,9 @@
 #include <stdio.h>
 
+/* 
+    Esses testes soh funcionam pro parser
+*/
+
 void printFloat(float);
 
 int x = 10;

@@ -7,10 +7,11 @@ compile:
 
 run: compile
 	@./compiler.bin < inputs/main.c
-
-pdf: run
 	@dot -Tpdf table.dot -Nfontname=Roboto -Nfontsize=10 -o table.pdf
 	@dot -Tpdf ast.dot -o ast.pdf
+	@cc -o out out.s lib/printint.c
+	@./out
+	@rm -f parser.c parser.h scanner.c ast.dot table.dot
 
 valgrind:
 	@bison parser.y
@@ -18,18 +19,8 @@ valgrind:
 	@gcc -Wall -g scanner.c parser.c lib/cg.c lib/type.c lib/ast.c lib/table.c -o compiler.bin
 	@valgrind ./compiler.bin < inputs/main.c
 
-main:
-	@gcc -Wall inputs/main.c -o apagar
-	@./apagar
-	@rm -rf apagar
-
-asm: run
-	@cc -o out out.s lib/printint.c
-	@./out
+test: compile
+	@./test.sh
 
 clean:
-	@rm -rf compilador.bin parser.c parser.h scanner.c compiler.bin ast.dot ast.pdf table.dot table.pdf out.s out out.o
-
-test: compile
-	
-	@./test.sh
+	@rm -rf compilador.bin parser.c parser.h scanner.c ast.dot ast.pdf table.dot table.pdf out.s out

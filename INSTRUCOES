@@ -1,0 +1,2 @@
+Use "make test" pra rodar os casos de teste. A cada caso de teste, ele vai gerar o pdf da tabela de simbolos e da AST, caso vc queira ve-los.
+Alem destes, ele tambem gera o out.s para os arquivos main.c-main4.c, os outros arquivos, ou contem erros semanticos, ou o gerador de codigo nao funciona propriamente

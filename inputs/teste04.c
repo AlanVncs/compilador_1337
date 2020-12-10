@@ -1,5 +1,9 @@
 #include <stdio.h>
 
+/* 
+    Esses testes soh funcionam pro parser
+*/
+
 void printInt(int);
 
 int main(int argc){

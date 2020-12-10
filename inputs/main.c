@@ -1,15 +1,17 @@
 #include <stdio.h>
 
-int printint(int n);
-int fatorial(int n);
-int r = 42;
+int printint(int x);
+int faz_calc(int n1, int n2);
 
 int main(){
-    int r = fatorial(5);
-    printint(r);
+    int num=faz_calc(7, 2);
+    printint(num);
+
+    return 0;
 }
 
-int fatorial(int n){
-    if(n<=0) return 1;
-    else     return n*fatorial(n-1);
+int faz_calc(int n1, int n2){
+    printint(n1);
+    printint(n2);
+    return n1 + n2;
 }
