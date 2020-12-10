@@ -14,19 +14,19 @@ digraph {
 				<td>printint</td>
 				<td>int</td>
 				<td>func_decl</td>
-				<td>7</td>
+				<td>1</td>
 			</tr>
 			<tr>
 				<td>teste</td>
 				<td>int</td>
 				<td>func_def</td>
-				<td>9</td>
+				<td>3</td>
 			</tr>
 			<tr>
 				<td>main</td>
 				<td>int</td>
 				<td>func_def</td>
-				<td>23</td>
+				<td>13</td>
 			</tr>
 		</table>>
 	];
@@ -44,7 +44,7 @@ digraph {
 				<td>k</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>9</td>
+				<td>3</td>
 			</tr>
 		</table>>
 	];
@@ -77,31 +77,31 @@ digraph {
 				<td>argc</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>23</td>
+				<td>13</td>
 			</tr>
 			<tr>
 				<td>x</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>24</td>
+				<td>14</td>
 			</tr>
 			<tr>
 				<td>y</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>25</td>
+				<td>15</td>
 			</tr>
 			<tr>
 				<td>j</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>30</td>
+				<td>17</td>
 			</tr>
 			<tr>
 				<td>l</td>
 				<td>int</td>
 				<td>variable</td>
-				<td>31</td>
+				<td>18</td>
 			</tr>
 		</table>>
 	];

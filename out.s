@@ -3,6 +3,7 @@
 .type teste, @function
 .comm k,8,8
 teste:
+	nop
 	push 	%rbp
 	mov 	%rsp, %rbp
 	mov 	%rdi, k(%rip)
@@ -25,6 +26,9 @@ teste:
 	mov 	%rax, %r9
 	mov 	$1, %r8
 	mov 	%r8, %rax
+	mov 	%rbp, %rsp
+	pop 	%rbp
+	ret
 	jmp 	.LC2
 .LC1:
 	mov 	k(%rip), %r8
@@ -33,15 +37,16 @@ teste:
 	mov 	%rax, %r9
 	mov 	$2, %r8
 	mov 	%r8, %rax
-.LC2:
 	mov 	%rbp, %rsp
 	pop 	%rbp
 	ret
+.LC2:
 .text
 .globl main
 .type main, @function
 .comm argc,8,8
 main:
+	nop
 	push 	%rbp
 	mov 	%rsp, %rbp
 	mov 	%rdi, argc(%rip)

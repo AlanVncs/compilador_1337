@@ -78,6 +78,7 @@ void genpostamble(){
 
 void genprologue(){
     fputs(
+        "\tnop\n"
         "\tpush \t%rbp\n"
         "\tmov \t%rsp, %rbp\n",
     outFile
@@ -422,6 +423,7 @@ int gen_equ(AST *ast){
 int gen_ret(AST *ast){
     int r=rec_gen(get_ast_child(ast, 0));
     fprintf(outFile, "\tmov \t%s, %%rax\n", reglist[r]);
+    genepilogue();
     free_register(r);
     return -1;
 }
@@ -460,7 +462,7 @@ int gen_func_def(AST *ast){
     }
 
     rec_gen(get_ast_child(ast, 1));
-    genepilogue();
+    // genepilogue();
     return -1;
 }
 

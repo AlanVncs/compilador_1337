@@ -1,7 +1,7 @@
 # ast.dot
-ast.pdf
+# ast.pdf
 # table.dot
-table.pdf
+# table.pdf
 compiler.bin
 parser.c
 parser.h
